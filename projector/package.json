@@ -1,0 +1,41 @@
+{
+  "name": "projector",
+  "version": "1.0.0",
+  "description": "D0 + E0 ",
+  "main": "./dist/main.js",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "test": "jest --watch"
+  },
+  "author": "Meta Gang",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jasmine": "^2.5.53",
+    "@types/jest": "^24.0.4",
+    "@types/jest-diff": "^20.0.1",
+    "browserify": "^14.4.0",
+    "gulp": "^3.9.1",
+    "gulp-jasmine-browser": "^1.9.0",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-typescript": "^3.2.1",
+    "gulp-uglify": "^3.0.0",
+    "gulp-util": "^3.0.8",
+    "jasmine-core": "^2.8.0",
+    "jest": "^24.1.0",
+    "karma": "^1.7.1",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-jasmine": "^1.1.0",
+    "karma-typescript": "^3.0.8",
+    "karma-typescript-preprocessor": "^0.3.1",
+    "parcel-bundler": "^1.11.0",
+    "ts-jest": "^23.10.5",
+    "tsify": "^3.0.1",
+    "typescript": "^3.7.3",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0"
+  },
+  "dependencies": {
+    "preact": "^10.6.2"
+  }
+}
