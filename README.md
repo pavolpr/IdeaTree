@@ -1,0 +1,2 @@
+# IdeaTree
+An adaptive system
