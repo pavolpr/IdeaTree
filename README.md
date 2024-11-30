@@ -1,2 +1,2 @@
 # IdeaTree
-An adaptive system
+An adaptive meta system
