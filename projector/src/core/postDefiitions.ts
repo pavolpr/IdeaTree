@@ -4,8 +4,8 @@ import { PrioritiesTable, PriorityDef, grammarLangHeap, ProjectionTermDef, Proje
 import { globalState } from "../mx/globalstate";
 import { TokenTermDef, tokenLangHeap, ConstantStringTokenTermDef, ConstantCharTokenTerm, TokenDef, ConstantStringTokenTerm, CharRangeTokenTerm, NotTokenTerm, TokenDefRefTokenTerm, ParenthesizedTokenTerm, QuantizedTokenTerm, OptionalTokenTerm, ZeroOrMoreTokenTerm, OneOrMoreTokenTerm, ParameterizedTokenTerm, SequenceTokenTerm, AlternativeTokenTerm, CharRangeTokenTermDef, NotTokenTermDef, TokenDefRefTokenTermDef, ParenthesizedTokenTermDef, QuantizedTokenTermDef, OptionalTokenTermDef, ZeroOrMoreTokenTermDef, OneOrMoreTokenTermDef, ParameterizedTokenTermDef, SequenceTokenTermDef, AlternativeTokenTermDef, ConstantCharTokenTermDef } from "./tokenLang";
 import { ConceptOrTraitDef, tINamed, LanguageModuleRoot, structureLangHeap, ConceptStructureMemberDef, TokenType, TokenTypeDef, ConceptDef, TraitRef, NodeRefType, SingleChildType, ChildrenType, conceptOrTraitDefDef } from "./structureLang";
-import { IWriteNode, INodeRef } from "../node";
-import { IFieldAccessor } from "../type";
+import type { IWriteNode, INodeRef } from "../node";
+import type { IFieldAccessor } from "../type";
 import { TokenDefDef, conceptStructureMemberDefDef, conceptDefDef, traitDefDef, traitRefDef, boolTypeDef, stringTypeDef, doubleTypeDef, integerTypeDef, nodeRefTypeDef, singleChildTypeDef, childrenTypeDef, StyleTermArgDef, languageModuleRootDef } from "../concept";
 import { CommentToEOL, CommentToEOLDef, DeleteCharsTrivia, DropSpaceTrivia, grammarTriviaLangHeap, InsertNodeTrivia, InsertTextTrivia, SeparatorTrivia, StartNewLineTrivia, Trivia, tTriviaAttr } from "./grammarTriviaLang";
 
@@ -16,19 +16,19 @@ globalState.setupEditMode();
 let heap = structureLangHeap;
 
 const Silver = def(colorDef("Silver", "#C0C0C0"));
-const Gray   = def(colorDef("Gray", "#808080"));
-const Black  = def(colorDef("Black", "#000000"));
-const Red    = def(colorDef("Red", "#FF0000"));
+const Gray = def(colorDef("Gray", "#808080"));
+const Black = def(colorDef("Black", "#000000"));
+const Red = def(colorDef("Red", "#FF0000"));
 const Maroon = def(colorDef("Maroon", "#800000"));
 const Yellow = def(colorDef("Yellow", "#FFFF00"));
-const Olive  = def(colorDef("Olive", "#808000"));
-const Lime   = def(colorDef("Lime", "#00FF00"));
-const Green  = def(colorDef("Green", "#008000"));
-const Aqua   = def(colorDef("Aqua", "#00FFFF"));
-const Teal   = def(colorDef("Teal", "#008080"));
-const Blue   = def(colorDef("Blue", "#0000FF"));
+const Olive = def(colorDef("Olive", "#808000"));
+const Lime = def(colorDef("Lime", "#00FF00"));
+const Green = def(colorDef("Green", "#008000"));
+const Aqua = def(colorDef("Aqua", "#00FFFF"));
+const Teal = def(colorDef("Teal", "#008080"));
+const Blue = def(colorDef("Blue", "#0000FF"));
 const DarkBlue = def(colorDef("DarkBlue", "#00008B"));
-const Navy   = def(colorDef("Navy", "#000080"));
+const Navy = def(colorDef("Navy", "#000080"));
 const Fuchsia = def(colorDef("Fuchsia", "#FF00FF"));
 const Purple = def(colorDef("Purple", "#800080"));
 
@@ -86,7 +86,7 @@ setTokenType(tINamed.NameFA, NameTDef);
 //         definitions*(separator: start-new-line)
 addProjection(languageModuleRootDef, undefined, [
     para(zeroOrMore(member(LanguageModuleRoot.DefinitionsCNA)),
-         separator(parens([startNewLine(), token("\u00A0"), startNewLine()])))
+        separator(parens([startNewLine(), token("\u00A0"), startNewLine()])))
 ]);
 
 // concept ConceptStructureMemberDef with INamed
@@ -133,11 +133,11 @@ addProjection(conceptDefDef, undefined, [
     optional(styledToken("abstract", KeywordStyle), ConceptDef.IsAbstractFA),
     optional(styledTokenOnNewLine("union", KeywordStyle), ConceptDef.IsUnionFA, false, "bla bla"),
     styledTokenOnNewLine("concept", KeywordStyle), styledMember(tINamed.NameFA, NameStyle),
-    optional(parensOnNewLine([dropSpace(), styledToken(":", OperatorStyle), 
-        reference(ConceptDef.InheritFA, styledMember(tINamed.NameFA, ReferenceStyle))
+    optional(parensOnNewLine([dropSpace(), styledToken(":", OperatorStyle),
+    reference(ConceptDef.InheritFA, styledMember(tINamed.NameFA, ReferenceStyle))
     ]), ConceptDef.InheritFA),
     optional(parensOnNewLine([styledToken("with", KeywordStyle),
-        para(oneOrMore(member(ConceptDef.TraitsCNA)), separator(parens([dropSpace(), token(",")])))
+    para(oneOrMore(member(ConceptDef.TraitsCNA)), separator(parens([dropSpace(), token(",")])))
     ]), ConceptDef.TraitsCNA),
     indentedBlock([
         para(zeroOrMore(member(ConceptDef.MembersCNA)), separator(startNewLine()))
@@ -155,11 +155,11 @@ addProjection(conceptDefDef, undefined, [
 addProjection(traitDefDef, undefined, [
     optional(styledToken("union", KeywordStyle), ConceptDef.IsUnionFA),
     styledToken("trait", KeywordStyle), styledMember(tINamed.NameFA, NameStyle),
-    optional(parens([dropSpace(), styledToken(":", OperatorStyle), 
-        reference(ConceptDef.InheritFA, styledMember(tINamed.NameFA, ReferenceStyle))
+    optional(parens([dropSpace(), styledToken(":", OperatorStyle),
+    reference(ConceptDef.InheritFA, styledMember(tINamed.NameFA, ReferenceStyle))
     ]), ConceptDef.InheritFA),
     optional(parens([styledToken("with", KeywordStyle),
-        para(oneOrMore(member(ConceptDef.TraitsCNA)), separator(parens([dropSpace(), token(",")])))
+    para(oneOrMore(member(ConceptDef.TraitsCNA)), separator(parens([dropSpace(), token(",")])))
     ]), ConceptDef.TraitsCNA),
     indentedBlock([
         para(zeroOrMore(member(ConceptDef.MembersCNA)), separator(startNewLine()))
@@ -180,7 +180,7 @@ addProjection(traitRefDef, undefined, [
 //         [drop-space "?"(style: Operator)]?isOptional
 addProjection(boolTypeDef, undefined, [
     styledToken("bool", TypeStyle),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , NodeRefType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), NodeRefType.IsOptionalFA)
 ]);
 // concept StringType
 //     projection
@@ -188,7 +188,7 @@ addProjection(boolTypeDef, undefined, [
 //         [drop-space "?"(style: Operator)]?isOptional
 addProjection(stringTypeDef, undefined, [
     styledToken("string", TypeStyle),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , NodeRefType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), NodeRefType.IsOptionalFA)
 ]);
 //concept TokenType 
 //         tokenDef: TokenDef
@@ -197,7 +197,7 @@ addProjection(stringTypeDef, undefined, [
 //             [drop-space "?"(style: Operator)]?isOptional
 addProjection(TokenTypeDef, undefined, [
     reference(TokenType.TokenDefFA, styledMember(tINamed.NameFA, TypeReferenceStyle)),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , NodeRefType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), NodeRefType.IsOptionalFA)
 ]);
 // concept DoubleType
 //     projection
@@ -205,7 +205,7 @@ addProjection(TokenTypeDef, undefined, [
 //         [drop-space "?"(style: Operator)]?isOptional
 addProjection(doubleTypeDef, undefined, [
     styledToken("double", TypeStyle),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , NodeRefType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), NodeRefType.IsOptionalFA)
 ]);
 // concept IntegerType
 //     projection
@@ -213,7 +213,7 @@ addProjection(doubleTypeDef, undefined, [
 //         [drop-space "?"(style: Operator)]?isOptional
 addProjection(integerTypeDef, undefined, [
     styledToken("int", TypeStyle),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , NodeRefType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), NodeRefType.IsOptionalFA)
 ]);
 // concept NodeRefType: 
 //     isOptional: bool
@@ -222,7 +222,7 @@ addProjection(integerTypeDef, undefined, [
 //         [drop-space "?"(style: Operator)]?isOptional
 addProjection(nodeRefTypeDef, undefined, [
     reference(NodeRefType.OfConceptFA, styledMember(tINamed.NameFA, TypeReferenceStyle)),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , NodeRefType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), NodeRefType.IsOptionalFA)
 ]);
 // concept SingleChildType
 //     projection
@@ -231,7 +231,7 @@ addProjection(nodeRefTypeDef, undefined, [
 addProjection(singleChildTypeDef, undefined, [
     styledToken("child", KeywordStyle),
     reference(SingleChildType.OfConceptFA, styledMember(tINamed.NameFA, TypeReferenceStyle)),
-    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]) , SingleChildType.IsOptionalFA)
+    optional(parens([dropSpace(), styledToken("?", OperatorStyle)]), SingleChildType.IsOptionalFA)
 ]);
 // concept ChildrenType //*, +
 //     projection
@@ -293,13 +293,13 @@ const EscapedCharStyle = def(styleDef("EscapedChar", [fontWeightBold(), colorSty
 
 // token UnsignedInteger
 //     Digit+(style: Number) //uint check after parsing
-const UnsignedIntegerTD = def(tokenDef("UnsignedInteger", 
+const UnsignedIntegerTD = def(tokenDef("UnsignedInteger",
     paraTT(oneOrMoreTT(tokenDefRefTT(DigitTDef)), style(NumberStyle))
 ));
 // token HexChar
 //     Digit | 'a'..'f' | 'A'..'F'
-const HexCharTD = def(tokenDef("HexChar", 
-    altsTT(tokenDefRefTT(DigitTDef), charRangeTT('a', 'f'), charRangeTT('A', 'F')) 
+const HexCharTD = def(tokenDef("HexChar",
+    altsTT(tokenDefRefTT(DigitTDef), charRangeTT('a', 'f'), charRangeTT('A', 'F'))
 ));
 // token HexColor
 //     '#'(style: Operator) [HexChar{6} HexChar{2}?](style: HexNumber)
@@ -319,12 +319,12 @@ const EscapedCharTD = def(tokenDef("EscapedChar", seqTT(
     paraTT(parensTT(altsTT(
         charTT('\\'), charTT('"'), charTT('\''), charTT('0'), charTT('n'), charTT('t'),
         seqTT(charTT('u'), paraTT(quantTT(tokenDefRefTT(HexCharTD), 4), style(HexNumberStyle))),
-        seqTT(charTT('u{'), paraTT(quantTT(tokenDefRefTT(HexCharTD), 1,6), style(HexNumberStyle)), charTT('}')),
+        seqTT(charTT('u{'), paraTT(quantTT(tokenDefRefTT(HexCharTD), 1, 6), style(HexNumberStyle)), charTT('}')),
     )), style(EscapedCharStyle))
 )));
 // token StringValue
 //     [!['\\' | '"'] | EscapedChar]*
-const StringValueTD = def(tokenDef("StringValue", 
+const StringValueTD = def(tokenDef("StringValue",
     zeroOrMoreTT(parensTT(altsTT(
         notTT(charTT('\\'), charTT('"')),
         tokenDefRefTT(EscapedCharTD)
@@ -332,7 +332,7 @@ const StringValueTD = def(tokenDef("StringValue",
 ));
 // token CharValue
 //     !['\\' | '\''] | EscapedChar
-const CharValueTD = def(tokenDef("CharValue", 
+const CharValueTD = def(tokenDef("CharValue",
     altsTT(
         notTT(charTT('\\'), charTT('\'')),
         tokenDefRefTT(EscapedCharTD)
@@ -360,8 +360,8 @@ addProjection(TokenDefDef, undefined, [
 //             drop-space '"'(style: Quote, match-brace-right)
 setTokenType(ConstantStringTokenTerm.ValueFA, StringValueTD);
 addProjection(ConstantStringTokenTermDef, undefined, [
-    para(token('"'), style(QuoteStyle), matchBraceLeft()), dropSpace(), 
-    styledMember(ConstantStringTerm.ValueFA, StringStyle),  
+    para(token('"'), style(QuoteStyle), matchBraceLeft()), dropSpace(),
+    styledMember(ConstantStringTerm.ValueFA, StringStyle),
     dropSpace(), para(token('"'), style(QuoteStyle), matchBraceRight())
 ]);
 
@@ -373,8 +373,8 @@ addProjection(ConstantStringTokenTermDef, undefined, [
 //         drop-space '\''(style:Quote, match-brace-right)
 setTokenType(ConstantCharTokenTerm.ValueFA, CharValueTD);
 addProjection(ConstantCharTokenTermDef, undefined, [
-    para(token('\''), style(QuoteStyle), matchBraceLeft()), dropSpace(), 
-    styledMember(ConstantCharTokenTerm.ValueFA, StringStyle),  
+    para(token('\''), style(QuoteStyle), matchBraceLeft()), dropSpace(),
+    styledMember(ConstantCharTokenTerm.ValueFA, StringStyle),
     dropSpace(), para(token('\''), style(QuoteStyle), matchBraceRight())
 ]);
 
@@ -441,7 +441,7 @@ addProjection(QuantizedTokenTermDef, quantifiedPrio, [
     para(token("{"), style(OperatorStyle), matchBraceLeft()), dropSpace(),
     styledMember(QuantizedTokenTerm.MinFA, NumberStyle),
     optional(parens([dropSpace(), styledToken(",", OperatorStyle),
-        optional(styledMember(QuantizedTokenTerm.MaxFA, NumberStyle), QuantizedTokenTerm.MaxFA)
+    optional(styledMember(QuantizedTokenTerm.MaxFA, NumberStyle), QuantizedTokenTerm.MaxFA)
     ]), QuantizedTokenTerm.IsRangeFA),
     dropSpace(), para(token("}"), style(OperatorStyle), matchBraceRight())
 ]);
@@ -562,7 +562,7 @@ addProjection(ProjectionDef, undefined, [
     ]), Projection.PriorityFA),
     indentedBlock([
         zeroOrMore(member(Projection.TermsCNA))
-    ])    
+    ])
 ]);
 
 // concept PrioritiesTable with IConceptMember
@@ -575,7 +575,7 @@ addProjection(PrioritiesTableDef, undefined, [
     styledToken("priorities", KeywordStyle),
     indentedBlock([
         para(zeroOrMore(member(PrioritiesTable.PrioritiesCNA)), separator(startNewLine()))
-    ])    
+    ])
 ]);
 
 // concept PriorityDef with INamed
@@ -903,7 +903,7 @@ addProjection(CommentToEOLDef, undefined, [
 function addProjection(parent: INodeRef, priority: INodeRef | undefined, terms: INodeRef[]) {
     const proj = Projection.new(heap);
     ConceptOrTraitDef.MembersCNA.insertLast(parent.write, proj.me);
-    if(priority != undefined) {
+    if (priority != undefined) {
         Projection.PriorityFA.set(proj, priority);
     }
     for (const term of terms) {
@@ -988,7 +988,7 @@ function optional(term: INodeRef, memberAcc: IFieldAccessor, isNegated = false, 
     const n = OptionalTerm.new(heap);
     OptionalTerm.TermCA.setChild(n, term);
     let cond = StructureMemberRefTCExpr.new(heap);
-    if(comment) {
+    if (comment) {
 
         // const delTrivia = DeleteCharsTrivia.new(heap);
         // Trivia.TokenPositionFA.set(delTrivia, 0);
@@ -1013,7 +1013,7 @@ function optional(term: INodeRef, memberAcc: IFieldAccessor, isNegated = false, 
 
     }
     StructureMemberRefTCExpr.MemberFA.set(cond, memberAcc.fieldDefNode);
-    if(isNegated) {
+    if (isNegated) {
         const ncond = NotExpr.new(heap);
         NotExpr.OperandCA.setChild(ncond, cond.me);
         cond = ncond;
@@ -1034,7 +1034,7 @@ function style(styleDef: INodeRef) {
     // InsertNodeTrivia.CharPositionFA.set(space, 0);
     // InsertTextTrivia.TextFA.set(space, "X-X");
     // tTriviaAttr.TriviaCNA.insertLast(n, space.me);
-      
+
 
     StyleTermArg.StyleFA.set(n, styleDef);
     return n.me;
@@ -1054,9 +1054,9 @@ function matchBraceRight() {
 }
 function priority(prioDef?: INodeRef, canBeEqual = true) {
     const n = PriorityTermArg.new(heap);
-    if(prioDef != undefined)
+    if (prioDef != undefined)
         PriorityTermArg.PriorityDefFA.set(n, prioDef);
-    if(canBeEqual) PriorityTermArg.CanBeEqualFA.set(n, true);
+    if (canBeEqual) PriorityTermArg.CanBeEqualFA.set(n, true);
     return n.me;
 }
 function styleDef(name: string, attributes: INodeRef[]) {
@@ -1147,13 +1147,13 @@ function parensTT(tt: INodeRef) {
     ParenthesizedTokenTerm.TermCA.setChild(token, tt);
     return token.me;
 }
-function quantTT(tt: INodeRef, min: number, max?: number|"inf") {
+function quantTT(tt: INodeRef, min: number, max?: number | "inf") {
     const token = QuantizedTokenTerm.new(heap);
     QuantizedTokenTerm.TermCA.setChild(token, tt);
     QuantizedTokenTerm.MinFA.set(token, Math.trunc(min).toString());
-    if(max !== undefined) {
+    if (max !== undefined) {
         QuantizedTokenTerm.IsRangeFA.set(token, true);
-        if(typeof(max) == "number")
+        if (typeof (max) == "number")
             QuantizedTokenTerm.MaxFA.set(token, Math.trunc(max).toString());
     }
     return token.me;
@@ -1182,18 +1182,18 @@ function paraTT(tt: INodeRef, ...args: INodeRef[]) {
     return token.me;
 }
 function seqTT(...tts: INodeRef[]) {
-    if(!(tts.length >= 2)) throw Error("at least two tts are needed for seqTT");
+    if (!(tts.length >= 2)) throw Error("at least two tts are needed for seqTT");
     const token = SequenceTokenTerm.new(heap);
-    SequenceTokenTerm.RightCA.setChild(token, tts[tts.length-1])
-    const left = tts.length == 2 ? tts[0] : seqTT(...tts.slice(0, tts.length-1));
+    SequenceTokenTerm.RightCA.setChild(token, tts[tts.length - 1])
+    const left = tts.length == 2 ? tts[0] : seqTT(...tts.slice(0, tts.length - 1));
     SequenceTokenTerm.LeftCA.setChild(token, left);
     return token.me;
 }
 function altsTT(...tts: INodeRef[]) {
-    if(!(tts.length >= 2)) throw Error("at least two tts are needed for altsTT");
+    if (!(tts.length >= 2)) throw Error("at least two tts are needed for altsTT");
     const token = AlternativeTokenTerm.new(heap);
-    AlternativeTokenTerm.RightCA.setChild(token, tts[tts.length-1])
-    const left = tts.length == 2 ? tts[0] : altsTT(...tts.slice(0, tts.length-1));
+    AlternativeTokenTerm.RightCA.setChild(token, tts[tts.length - 1])
+    const left = tts.length == 2 ? tts[0] : altsTT(...tts.slice(0, tts.length - 1));
     AlternativeTokenTerm.LeftCA.setChild(token, left);
     return token.me;
 }

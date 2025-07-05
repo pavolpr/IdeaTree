@@ -1,7 +1,7 @@
 import { conceptDefDef } from "../concept";
 import { Projection, ProjectionDef } from "../core/grammarLang";
-import { Heap } from "../heap";
-import { INodeRef, IReadNode } from "../node";
+import type { Heap } from "../heap";
+import type { INodeRef, IReadNode } from "../node";
 import { TypeKind } from "../type";
 
 
@@ -29,12 +29,12 @@ export class ProjectionMap {
     addToProjectionMap(langHeap: Heap) {
         const map = this.map;
         forAllNodes(langHeap.root.read, node => {
-            if(node.def == ProjectionDef) {
+            if (node.def == ProjectionDef) {
                 let conceptDef = node.parent?.read;
-                if(conceptDef?.def != conceptDefDef) {
+                if (conceptDef?.def != conceptDefDef) {
                     conceptDef = Projection.ConceptFA.get(node)?.read;
                 }
-                if(conceptDef == undefined) {
+                if (conceptDef == undefined) {
                     throw new Error(`no owner of the projection, node:${node}`);
                 }
                 map.set(conceptDef.me, node.me);
@@ -48,15 +48,15 @@ export class ProjectionMap {
 }
 
 export function forAllNodes(node: IReadNode, run: (node: IReadNode) => void, excludeTop = false) {
-    if(!excludeTop)
+    if (!excludeTop)
         run(node);
-    
+
     const fields = node.type.fields;
-    for(let i = 0; i < fields.length; i++) {
+    for (let i = 0; i < fields.length; i++) {
         const field = fields[i];
-        if(field.type.kind == TypeKind.ChildNode) {
+        if (field.type.kind == TypeKind.ChildNode) {
             let child = (node.getFieldAt(i) as INodeRef | undefined)?.read;
-            for(; child != undefined; child = child.next?.read) {
+            for (; child != undefined; child = child.next?.read) {
                 forAllNodes(child, run, false);
             }
         }

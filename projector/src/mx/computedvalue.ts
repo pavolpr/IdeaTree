@@ -1,5 +1,5 @@
 import {
-    ISource,
+    type ISource,
     reportRead,
     propagateMaybeChanged,
     propagateChangeConfirmed,
@@ -8,7 +8,7 @@ import {
     //getObservers
 } from "./source";
 import {
-    IDerivation,
+    type IDerivation,
     TrackingState, TrackingStateMasks,
     trackDerivedFunction,
     clearSources,
@@ -67,30 +67,30 @@ export interface ComputedValue<T> {
     isComputedValue: boolean; //ComputedValue.prototype.isComputedValue = true;
 }
 export class ComputedValue<T, S = object | undefined> implements ISource, IComputedValue<T>, IDerivation {
-    protected _state: TrackingState = TrackingState.UpToDate; //1
-    
-    get lowestDerivationState(): TrackingState { return this._state & TrackingStateMasks.stateMask; }
+    protected _state: number = TrackingState.UpToDate; //1
+
+    get lowestDerivationState(): TrackingState { return (this._state & TrackingStateMasks.stateMask) as TrackingState; }
     set lowestDerivationState(value: TrackingState) { this._state = (value & TrackingStateMasks.stateMask) | (this._state & ~TrackingStateMasks.stateMask); }
     //lowestDerivationState = TrackingState.UpToDate;
 
     get isPendingUntracked(): boolean { return (this._state & TrackingStateMasks.isPendingUntrackedBit) !== 0; }
-    set isPendingUntracked(value: boolean) {  this._state = value ? (this._state | TrackingStateMasks.isPendingUntrackedBit) : (this._state & ~TrackingStateMasks.isPendingUntrackedBit); }
+    set isPendingUntracked(value: boolean) { this._state = value ? (this._state | TrackingStateMasks.isPendingUntrackedBit) : (this._state & ~TrackingStateMasks.isPendingUntrackedBit); }
     //isPendingUntracked: boolean = false;
-    
+
     get diffValue(): boolean { return (this._state & TrackingStateMasks.diffValueBit) !== 0; }
     set diffValue(value: boolean) { this._state = value ? (this._state | TrackingStateMasks.diffValueBit) : (this._state & ~TrackingStateMasks.diffValueBit); }
     //diffValue = false;
-    
-    get sourcesState(): TrackingState { return (this._state >> TrackingStateMasks.hiStateShift) & TrackingStateMasks.stateMask; }
-    set sourcesState(value: TrackingState) { 
-        this._state = ((value << TrackingStateMasks.hiStateShift) & TrackingStateMasks.hiStateMask) | (this._state & ~TrackingStateMasks.hiStateMask); 
+
+    get sourcesState(): TrackingState { return ((this._state >> TrackingStateMasks.hiStateShift) & TrackingStateMasks.stateMask) as TrackingState; }
+    set sourcesState(value: TrackingState) {
+        this._state = ((value << TrackingStateMasks.hiStateShift) & TrackingStateMasks.hiStateMask) | (this._state & ~TrackingStateMasks.hiStateMask);
     }
     //sourcesState = TrackingState.NotTracking; //0
-    
+
     get isComputing(): boolean { return (this._state & TrackingStateMasks.isComputingBit) !== 0; }
     set isComputing(value: boolean) { this._state = value ? (this._state | TrackingStateMasks.isComputingBit) : (this._state & ~TrackingStateMasks.isComputingBit); }
     //isComputing: boolean = false; // to check for cycles
-    
+
     sources = []; // nodes we are looking at. Our value depends on these nodes
     //newSources = null; // during tracking it's an array with new observed observers
     unboundSrcsCount = 0;
@@ -100,7 +100,9 @@ export class ComputedValue<T, S = object | undefined> implements ISource, ICompu
     lastAccessedBy = 0;
     derId = getNextId();
     protected value: T | undefined | CaughtException = new CaughtException(null);
-    
+
+    scope: S;
+
     derivation!: (this: S) => T //must be defined in a derived class or given by the constructor
     /**
      * Create a new computed value based on a function expression.
@@ -115,13 +117,14 @@ export class ComputedValue<T, S = object | undefined> implements ISource, ICompu
      * This is useful for working with vectors, mouse coordinates etc.
      */
     constructor(
-        public scope: S,
+        scope: S,
         derivation?: (this: S) => T,
         //private equals: IEqualsComparer<any>,
         //name: string,
         //setter?: (v: T) => void
     ) {
-        if(derivation) this.derivation = derivation;
+        this.scope = scope;
+        if (derivation) this.derivation = derivation;
         //this.name = name || "ComputedValue@" + getNextId();
         //if (setter) this.setter = createAction(name + "-setter", setter) as any;
     }
@@ -264,35 +267,35 @@ export class ComputedValue<T, S = object | undefined> implements ISource, ICompu
     //     return toPrimitive(this.get());
     // }
 
-//     whyRun() {
-//         const isTracking = Boolean(globalState.trackingDerivation);
-//         const observing = unique(this.isComputing ? this.newObserving! : this.observing).map(
-//             (dep: any) => dep.name
-//         );
-//         const observers = unique(getObservers(this).map(dep => dep.name));
-//         return (
-//             `
-// WhyRun? computation '${this.name}':
-//  * Running because: ${isTracking
-//      ? "[active] the value of this computation is needed by a reaction"
-//      : this.isComputing
-//        ? "[get] The value of this computed was requested outside a reaction"
-//        : "[idle] not running at the moment"}
-// ` +
-//             (this.dependenciesState === IDerivationState.NOT_TRACKING
-//                 ? getMessage("m032")
-//                 : ` * This computation will re-run if any of the following observables changes:
-//     ${joinStrings(observing)}
-//     ${this.isComputing && isTracking
-//         ? " (... or any observable accessed during the remainder of the current run)"
-//         : ""}
-//     ${getMessage("m038")}
+    //     whyRun() {
+    //         const isTracking = Boolean(globalState.trackingDerivation);
+    //         const observing = unique(this.isComputing ? this.newObserving! : this.observing).map(
+    //             (dep: any) => dep.name
+    //         );
+    //         const observers = unique(getObservers(this).map(dep => dep.name));
+    //         return (
+    //             `
+    // WhyRun? computation '${this.name}':
+    //  * Running because: ${isTracking
+    //      ? "[active] the value of this computation is needed by a reaction"
+    //      : this.isComputing
+    //        ? "[get] The value of this computed was requested outside a reaction"
+    //        : "[idle] not running at the moment"}
+    // ` +
+    //             (this.dependenciesState === IDerivationState.NOT_TRACKING
+    //                 ? getMessage("m032")
+    //                 : ` * This computation will re-run if any of the following observables changes:
+    //     ${joinStrings(observing)}
+    //     ${this.isComputing && isTracking
+    //         ? " (... or any observable accessed during the remainder of the current run)"
+    //         : ""}
+    //     ${getMessage("m038")}
 
-//   * If the outcome of this computation changes, the following observers will be re-run:
-//     ${joinStrings(observers)}
-// `)
-//         );
-//     }
+    //   * If the outcome of this computation changes, the following observers will be re-run:
+    //     ${joinStrings(observers)}
+    // `)
+    //         );
+    //     }
 }
 ComputedValue.prototype.isComputedValue = true;
 
@@ -301,5 +304,5 @@ ComputedValue.prototype.isComputedValue = true;
 export function isComputedValue(x: any): x is IComputedValue<any> {
     //return x instanceof ComputedValue;
     return x && x.isComputedValue === true;
-} 
+}
 //= createInstanceofPredicate("ComputedValue", ComputedValue);

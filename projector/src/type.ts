@@ -1,19 +1,20 @@
-import { INodeRef, IReadNode, IWriteNode, FieldValue } from "./node";
+import type { INodeRef, IReadNode, IWriteNode, FieldValue } from "./node";
 import * as utils from "./utils";
 import { globalState, conceptSetByNodeRef } from "./mx/globalstate";
-import { IConcept } from "./concept";
+import type { IConcept } from "./concept";
 
 type Uid = number;
 
-export const enum TypeKind {
-    Primitive,//Bool, IntN, UIntN, Single, Double,
-    Node, Struct, /*Type,*/
-    Array, String, 
-    Ref,
-    ChildNode //only implementation type for Node's child fields, not used in T0
-    //NodeTop, ObjectTop //?? Type
-}
-
+export const TypeKind = {
+    Primitive: 0,
+    Node: 1,
+    Struct: 2,
+    Array: 3,
+    String: 4,
+    Ref: 5,
+    ChildNode: 6
+} as const;
+export type TypeKind = typeof TypeKind[keyof typeof TypeKind];
 //export type T0Type = NodeType;
 
 export interface IType {
@@ -24,21 +25,30 @@ export interface IType {
 
 export function typeEquals(t1: IType, t2: IType): boolean {
     return t1 === t2
-    || (t1._hashCode === t2._hashCode 
-        && t1.kind === t2.kind
-        && t1.equalsSameKindAndHash(t2));
+        || (t1._hashCode === t2._hashCode
+            && t1.kind === t2.kind
+            && t1.equalsSameKindAndHash(t2));
 }
 
-export const enum PrimitiveKind {
-    Empty,
-    Bool,
-    UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64,
-    //Char16,
-    Single, Double
-}
+export const PrimitiveKind = {
+    Empty: 0,
+    Bool: 1,
+    UInt8: 2,
+    Int8: 3,
+    UInt16: 4,
+    Int16: 5,
+    UInt32: 6,
+    Int32: 7,
+    UInt64: 8,
+    Int64: 9,
+    //Char16: 10 as PrimitiveKindType,
+    Single: 10,
+    Double: 11
+} as const;
+export type PrimitiveKind = typeof PrimitiveKind[keyof typeof PrimitiveKind];
 
 export abstract class PrimitiveType implements IType {
-    kind!: TypeKind.Primitive;
+    kind!: TypeKind;
     primitiveKind!: PrimitiveKind;
     _hashCode: number;
     //heap: IHeap;
@@ -54,75 +64,79 @@ export abstract class PrimitiveType implements IType {
 PrimitiveType.prototype.kind = TypeKind.Primitive;
 
 export class EmptyType extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.Empty;
+    declare primitiveKind: PrimitiveKind;
 }
 EmptyType.prototype.primitiveKind = PrimitiveKind.Empty;
 
-export class BoolType extends PrimitiveType { 
-    primitiveKind!: PrimitiveKind.Bool;
+export class BoolType extends PrimitiveType {
+    declare primitiveKind: PrimitiveKind;
 }
 BoolType.prototype.primitiveKind = PrimitiveKind.Bool;
 
 export class Uint8Type extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.UInt8;
+    declare primitiveKind: PrimitiveKind;
 }
 Uint8Type.prototype.primitiveKind = PrimitiveKind.UInt8;
 
-export class Uint16Type extends PrimitiveType { 
-    primitiveKind!: PrimitiveKind.UInt16;
+export class Uint16Type extends PrimitiveType {
+    declare primitiveKind: PrimitiveKind;
 }
 Uint16Type.prototype.primitiveKind = PrimitiveKind.UInt16;
 
-export class Uint32Type extends PrimitiveType { 
-    primitiveKind!: PrimitiveKind.UInt32;
+export class Uint32Type extends PrimitiveType {
+    declare primitiveKind: PrimitiveKind;
 }
 Uint32Type.prototype.primitiveKind = PrimitiveKind.UInt32;
 
-export class Uint64Type extends PrimitiveType { 
-    primitiveKind!: PrimitiveKind.UInt64;
+export class Uint64Type extends PrimitiveType {
+    declare primitiveKind: PrimitiveKind;
 }
 Uint64Type.prototype.primitiveKind = PrimitiveKind.UInt64;
 
-export class Int8Type extends PrimitiveType { 
-    primitiveKind!: PrimitiveKind.Int8;
+export class Int8Type extends PrimitiveType {
+    declare primitiveKind: PrimitiveKind;
 }
 Int8Type.prototype.primitiveKind = PrimitiveKind.Int8;
 
 export class Int16Type extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.Int16;
+    declare primitiveKind: PrimitiveKind;
 }
 Int16Type.prototype.primitiveKind = PrimitiveKind.Int16;
 
 export class Int32Type extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.Int32;
+    declare primitiveKind: PrimitiveKind;
 }
 Int32Type.prototype.primitiveKind = PrimitiveKind.Int32;
 
 export class Int64Type extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.Int64;
+    declare primitiveKind: PrimitiveKind;
 }
 Int64Type.prototype.primitiveKind = PrimitiveKind.Int64;
 
 export class SingleType extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.Single;
+    declare primitiveKind: PrimitiveKind;
 }
 SingleType.prototype.primitiveKind = PrimitiveKind.Single;
 
 export class DoubleType extends PrimitiveType {
-    primitiveKind!: PrimitiveKind.Double;
+    declare primitiveKind: PrimitiveKind;
 }
 DoubleType.prototype.primitiveKind = PrimitiveKind.Double;
 
 
-export const enum RefKind {
-    UaNode,   LocalNode,
-    UaObject, LocalObject,
-    UaValue,  LocalValue
-}
+export type RefKindType = 0 | 1 | 2 | 3 | 4 | 5;
+export const RefKind = {
+    UaNode: 0 as RefKindType,
+    LocalNode: 1 as RefKindType,
+    UaObject: 2 as RefKindType,
+    LocalObject: 3 as RefKindType,
+    UaValue: 4 as RefKindType,
+    LocalValue: 5 as RefKindType
+};
 
 export abstract class RefType implements IType {
-    kind!: TypeKind.Ref;
-    refKind!: RefKind;
+    kind!: TypeKind;
+    refKind!: RefKindType;
     _hashCode: number;
     def: INodeRef; //ref's concept
     constructor(def: INodeRef) {
@@ -136,29 +150,29 @@ export abstract class RefType implements IType {
 RefType.prototype.kind = TypeKind.Ref;
 
 export class UaNodeRefType extends RefType {
-    refKind!: RefKind.UaNode;
+    declare refKind: RefKindType;
 }
 UaNodeRefType.prototype.refKind = RefKind.UaNode;
 
 export class LocalNodeRefType extends RefType {
-    refKind!: RefKind.LocalNode;
+    declare refKind: RefKindType;
 }
 LocalNodeRefType.prototype.refKind = RefKind.LocalNode;
 
-export class UaObjectRefType extends RefType { 
-    refKind!: RefKind.UaObject;
+export class UaObjectRefType extends RefType {
+    declare refKind: RefKindType;
 }
 UaObjectRefType.prototype.refKind = RefKind.UaObject;
 
-export class LocalObjectRefType extends RefType { 
-    refKind!: RefKind.LocalObject;
+export class LocalObjectRefType extends RefType {
+    declare refKind: RefKindType;
 }
 LocalObjectRefType.prototype.refKind = RefKind.LocalObject;
 
 type ValueHeapType = ArrayType | StringType;
 
 export class UaValueRefType extends RefType {
-    refKind!: RefKind.UaValue;
+    declare refKind: RefKindType;
     valueType: ValueHeapType;
     constructor(def: INodeRef, valueType: ValueHeapType) {
         super(def);
@@ -168,7 +182,7 @@ export class UaValueRefType extends RefType {
 UaValueRefType.prototype.refKind = RefKind.UaValue;
 
 export class LocalValueRefType extends RefType {
-    refKind!: RefKind.LocalValue;
+    declare refKind: RefKindType;
     valueType: ValueHeapType;
     constructor(def: INodeRef, valueType: ValueHeapType) {
         super(def);
@@ -180,7 +194,7 @@ LocalValueRefType.prototype.refKind = RefKind.LocalValue;
 type FixedSizedType = StructType | PrimitiveType | RefType;
 
 export class ArrayType implements IType {
-    kind!: TypeKind.Array;
+    declare kind: TypeKind;
     _hashCode: number;
     def: INodeRef; //array's concept
     elemType: FixedSizedType;
@@ -190,7 +204,7 @@ export class ArrayType implements IType {
         this.elemType = elemType;
     }
     equalsSameKindAndHash(other: ArrayType): boolean {
-        if(this.def !== other.def)
+        if (this.def !== other.def)
             return false;
         return typeEquals(this.elemType, other.elemType);
     }
@@ -201,7 +215,7 @@ export class ArrayType implements IType {
 ArrayType.prototype.kind = TypeKind.Array;
 
 export class StringType implements IType {
-    kind!: TypeKind.String;
+    declare kind: TypeKind;
     _hashCode: number;
     def: INodeRef; //strings's concept
     constructor(def: INodeRef) {
@@ -219,7 +233,7 @@ export class StringType implements IType {
 StringType.prototype.kind = TypeKind.String;
 
 export class ChildNodeType implements IType {
-    kind!: TypeKind.ChildNode;
+    declare kind: TypeKind;
     _hashCode: number;
     def: INodeRef; //child-node-type's concept
     constructor(def: INodeRef) {
@@ -244,31 +258,31 @@ export function normalizeFieldsAndHash(kind: TypeKind, fields: FieldDef[], def: 
     return hashCode;
 }
 abstract class TypeWithFields /*implements IType*/ {
-    kind!: TypeKind.Struct | TypeKind.Node;
+    kind!: TypeKind;
     readonly _hashCode: number;
     readonly def: INodeRef; //struct concept
     readonly fields: FieldDef[];
     constructor(def: INodeRef, fields: FieldDef[], hashCode?: number) {
-        if(hashCode === undefined) {
+        if (hashCode === undefined) {
             hashCode = normalizeFieldsAndHash(this.kind, fields, def);
         }
         this._hashCode = hashCode;
         this.def = def;
         this.fields = fields;
     }
-    
+
 
     equalsSameKindAndHash(other: TypeWithFields): boolean {
         return this.equalsDefAndFields(other.def, other.fields);
     }
     equalsDefAndFields(def: INodeRef, otherFields: FieldDef[]): boolean {
-        if(this.def !== def)
+        if (this.def !== def)
             return false;
         const fields = this.fields;
-        if(fields.length !== otherFields.length)
+        if (fields.length !== otherFields.length)
             return false;
-        for(let i = 0; i < fields.length; i++) {
-            if(!fieldEquals(fields[i], otherFields[i]))
+        for (let i = 0; i < fields.length; i++) {
+            if (!fieldEquals(fields[i], otherFields[i]))
                 return false;
         }
         return true;
@@ -291,12 +305,12 @@ abstract class TypeWithFields /*implements IType*/ {
             }
         }
         return ~low;//-(low+1); //must be <0, the low is the insert position for the missing field
-    
+
         //low + (hi - low)/2
         //low = 2x + a, hi = 2y + b 
         //... 2x + a + (2y+b -2x -a)/2
         //... 2x + a + (2y + -2x + b-a) / 2
-        
+
         //--- (low + hi)/2
         //--- (2x + a + 2y + b)/2
         //--- (2x + 2y + a + b)/2
@@ -305,12 +319,12 @@ abstract class TypeWithFields /*implements IType*/ {
 }
 
 export class StructType extends TypeWithFields implements IType {
-    kind!: TypeKind.Struct;
-    
+    declare kind: TypeKind;
+
     constructor(def: INodeRef, fields: FieldDef[]) {
         super(def, fields);
     }
-        
+
     insertField(field: FieldDef, index: number): StructType {
         if (field.type.kind === TypeKind.ChildNode) {
             throw new Error("Trying to insert a child field into a StructType.");
@@ -344,9 +358,9 @@ const deleteFieldSentinel: IType = {
 
 //TODO: mem unit where this type belongs
 export class NodeType extends TypeWithFields implements IType {
-    kind!: TypeKind.Node;
+    declare kind: TypeKind;
     readonly fieldInserts: utils.ArraySet<NodeFieldInsert> = [];
-    
+
     constructor(def: INodeRef, fields: FieldDef[], hashCode?: number) {
         super(def, fields, hashCode);
     }
@@ -360,31 +374,31 @@ export class NodeType extends TypeWithFields implements IType {
         const key = fieldInsertKey(fieldUid, fieldType);
         const resInsert = nodeFieldInsertSet.add(this.fieldInserts, key);
         let toNodeType = resInsert.toNodeType;
-        if(toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
+        if (toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
             const newFields = insertField(this.fields, resInsert.field, index);
             resInsert.toNodeType = toNodeType = getNodeType(this.def, newFields);//nodeType.insertField(resInsert.field, index);
         }
         return toNodeType;
     }
-    
+
     updateField(newFieldType: IType, index: number): NodeType {
         const fields = this.fields;
         const key = fieldInsertKey(fields[index].uid, newFieldType);
         const resInsert = nodeFieldInsertSet.add(this.fieldInserts, key);
         let toNodeType = resInsert.toNodeType;
-        if(toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
+        if (toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
             const newFields = updateField(fields, newFieldType, index);
             resInsert.toNodeType = toNodeType = getNodeType(this.def, newFields);//nodeType.updateField(newFieldType, index);
         }
         return toNodeType;
     }
-    
+
     removeField(index: number): NodeType {
         const fields = this.fields;
         const key = fieldInsertKey(fields[index].uid, deleteFieldSentinel);
         const resInsert = nodeFieldInsertSet.add(this.fieldInserts, key);
         let toNodeType = resInsert.toNodeType;
-        if(toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
+        if (toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
             const newFields = removeField(fields, index);
             resInsert.toNodeType = toNodeType = getNodeType(this.def, newFields); //nodeType.removeField(index);
         }
@@ -429,7 +443,7 @@ NodeType.prototype.kind = TypeKind.Node;
 //     //low = 2x + a, hi = 2y + b 
 //     //... 2x + a + (2y+b -2x -a)/2
 //     //... 2x + a + (2y + -2x + b-a) / 2
-    
+
 //     //--- (low + hi)/2
 //     //--- (2x + a + 2y + b)/2
 //     //--- (2x + 2y + a + b)/2
@@ -439,8 +453,8 @@ NodeType.prototype.kind = TypeKind.Node;
 //TODO: inline these 
 function insertField(fields: FieldDef[], field: FieldDef, index: number): FieldDef[] {
     const uid = field.uid;
-    if (index < fields.length && uid >= fields[index].uid 
-        || index-1 >= 0 && fields[index-1].uid >= uid) {
+    if (index < fields.length && uid >= fields[index].uid
+        || index - 1 >= 0 && fields[index - 1].uid >= uid) {
         throw new Error("Invalid try to insert a field.");
     }
     const newFields = fields.slice();
@@ -479,7 +493,7 @@ export class FieldDef { //: IEquatable<FieldDef>
 }
 
 export function fieldEquals(fld1: FieldDef, fld2: FieldDef): boolean {
-    if(fld1._hashCode !== fld2._hashCode || fld1.uid !== fld2.uid) 
+    if (fld1._hashCode !== fld2._hashCode || fld1.uid !== fld2.uid)
         return false;
     return typeEquals(fld1.type, fld2.type);
 }
@@ -490,12 +504,15 @@ export interface IFieldAccessor {
 }
 
 export class FieldAccessor<V extends FieldValue> implements IFieldAccessor {
-    constructor(
-        readonly fieldDefNode: INodeRef,
-        readonly fieldType: IType
-    ) {}
+    readonly fieldDefNode: INodeRef;
+    readonly fieldType: IType;
 
-    get(node: IReadNode) : V | undefined {
+    constructor(fieldDefNode: INodeRef, fieldType: IType) {
+        this.fieldDefNode = fieldDefNode;
+        this.fieldType = fieldType;
+    }
+
+    get(node: IReadNode): V | undefined {
         const value = node.getField(this.fieldDefNode, false);
         return value as V | undefined;
     }
@@ -510,15 +527,17 @@ export class FieldAccessor<V extends FieldValue> implements IFieldAccessor {
 }
 
 export class ChildAccessor implements IFieldAccessor {
-    constructor(
-        readonly fieldDefNode: INodeRef,
-        readonly fieldType: IType
-    ) {
-        if(fieldType.kind !== TypeKind.ChildNode)
+    readonly fieldDefNode: INodeRef;
+    readonly fieldType: IType;
+
+    constructor(fieldDefNode: INodeRef, fieldType: IType) {
+        this.fieldDefNode = fieldDefNode;
+        this.fieldType = fieldType;
+        if (fieldType.kind !== TypeKind.ChildNode)
             throw "Expected ChildNode type.";
     }
 
-    getChild(node: IReadNode) : INodeRef | undefined {
+    getChild(node: IReadNode): INodeRef | undefined {
         const value = node.getField(this.fieldDefNode, true);
         return value as INodeRef | undefined;
     }
@@ -526,7 +545,7 @@ export class ChildAccessor implements IFieldAccessor {
     setChild(node: IWriteNode, child: INodeRef): IWriteNode {
         return node.setChild(this.fieldDefNode, child, this.fieldType);
     }
-    
+
     removeChild(node: IWriteNode): number {
         return node.removeChildren(this.fieldDefNode);
     }
@@ -534,19 +553,21 @@ export class ChildAccessor implements IFieldAccessor {
 
 //TODO: implement children's type checking against the fieldType
 export class ChildrenAccessor implements IFieldAccessor {
-    constructor(
-        readonly fieldDefNode: INodeRef,
-        readonly fieldType: IType
-    ) {
-        if(fieldType.kind !== TypeKind.ChildNode)
+    readonly fieldDefNode: INodeRef;
+    readonly fieldType: IType;
+
+    constructor(fieldDefNode: INodeRef, fieldType: IType) {
+        this.fieldDefNode = fieldDefNode;
+        this.fieldType = fieldType;
+        if (fieldType.kind !== TypeKind.ChildNode)
             throw "Expected ChildNode type.";
     }
 
-    getFirstChild(node: IReadNode) : INodeRef | undefined {
+    getFirstChild(node: IReadNode): INodeRef | undefined {
         const value = node.getFirstChild(this.fieldDefNode);
         return value as INodeRef | undefined;
     }
-    getLastChild(node: IReadNode) : INodeRef | undefined {
+    getLastChild(node: IReadNode): INodeRef | undefined {
         const first = node.getFirstChild(this.fieldDefNode);
         const prev = first?.read?.prev;
         return (prev || first) as INodeRef | undefined;
@@ -564,7 +585,7 @@ export class ChildrenAccessor implements IFieldAccessor {
     insertAfter(node: IWriteNode, anchor: INodeRef): void {
         return node.insertAfter(anchor);
     }
-    
+
     removeChildren(node: IWriteNode): number {
         return node.removeChildren(this.fieldDefNode);
     }
@@ -581,7 +602,7 @@ export const fieldDefComparer: utils.IDictComparer<FieldDef> = {
 
 function ensureNormalizedStructFieldsOrder(fields: FieldDef[]) {
     let prev: FieldDef | undefined;
-    for(const field of fields) {
+    for (const field of fields) {
         if (prev !== undefined && structFieldDefSortCompare(prev, field) > 0) {
             fields.sort(structFieldDefSortCompare);
             break;
@@ -606,7 +627,7 @@ export class NodeFieldInsert {
         //this.nodeType = nodeType;
         this.field = field;
         //this._hashCode = hashCode;
-        this.toNodeType = undefined;     
+        this.toNodeType = undefined;
     }
 }
 
@@ -638,7 +659,7 @@ export interface IFieldInsertKey {
 }
 
 const nodeFieldInsertSet = new utils.ArraySetImplementation<IFieldInsertKey, NodeFieldInsert>(
-    (key: IFieldInsertKey, b: NodeFieldInsert) => 
+    (key: IFieldInsertKey, b: NodeFieldInsert) =>
         //key.hashCode === b._hashCode && 
         key.fieldHashCode === b.field._hashCode
         && key.fieldUid === b.field.uid
@@ -670,7 +691,7 @@ let nodeTypeKey: INodeTypeKey = {
 };
 
 const emptyFreezedArray: any[] = [];
-if(Object.freeze) Object.freeze(emptyFreezedArray);
+if (Object.freeze) Object.freeze(emptyFreezedArray);
 
 export function getNodeType(def: INodeRef, fields: FieldDef[] = emptyFreezedArray): NodeType {
     const key = nodeTypeKey;

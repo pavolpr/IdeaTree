@@ -1,5 +1,5 @@
 import {
-    IDerivation,
+    type IDerivation,
     TrackingState,
     trackDerivedFunction,
     clearSources,
@@ -8,7 +8,7 @@ import {
     TrackingStateMasks,
     //replaceSource
 } from "./derivation";
-import { ISource, startBatch, endBatch } from "./source";
+import { type ISource, startBatch, endBatch } from "./source";
 import { globalState, getNextId, invariant } from "./globalstate";
 // import {
 //     //createInstanceofPredicate,
@@ -53,9 +53,9 @@ export interface Reaction {
     errorHandler: (error: any, derivation: IDerivation) => void;
 }
 export class Reaction implements IDerivation, IReactionPublic {
-    protected _state: TrackingState = TrackingState.NotTracking; //0
-    
-    get sourcesState(): TrackingState { return this._state & TrackingStateMasks.stateMask; }
+    protected _state: number = TrackingState.NotTracking; //0
+
+    get sourcesState(): TrackingState { return (this._state & TrackingStateMasks.stateMask) as TrackingState; }
     set sourcesState(value: TrackingState) { this._state = (value & TrackingStateMasks.stateMask) | (this._state & ~TrackingStateMasks.stateMask); }
 
     get isDisposed(): boolean { return (this._state & TrackingStateMasks.isDisposedBit) !== 0; }
@@ -73,20 +73,20 @@ export class Reaction implements IDerivation, IReactionPublic {
 
     sources: ISource[] = []; // nodes we are looking at. Our value depends on these nodes
     // newSources: ISource[] = [];
-    
+
     diffValue = 0;
     // runId = 0;
     unboundSrcsCount = 0;
     derId = getNextId();
     name: string;
-    /*virtual*/ onInvalidate() {}//!: (this: this) => void
+    /*virtual*/ onInvalidate() { }//!: (this: this) => void
 
     constructor(
         name: string | undefined,
         onInvalidate?: () => void
     ) {
         this.name = name ?? "Reaction@" + this.derId;
-        if(onInvalidate) this.onInvalidate = onInvalidate;
+        if (onInvalidate) this.onInvalidate = onInvalidate;
     }
 
     onBecomeStale() {
@@ -171,18 +171,18 @@ export class Reaction implements IDerivation, IReactionPublic {
             // If your debugger ends up here, know that some reaction (like the render() of an observer component, autorun or reaction)
             // threw an exception and that mobx caught it, to avoid that it brings the rest of your application down.
             // The original cause of the exception (the code that caused this reaction to run (again)), is still in the stack.
-            
+
             // However, more interesting is the actual stack trace of the error itself.
             // Hopefully the error is an instanceof Error, because in that case you can inspect the original stack of the error from where it was thrown.
             // See \`error.stack\` property, or press the very subtle "(...)" link you see near the console.error message that probably brought you here.
             // That stack is more interesting than the stack of this console.error itself.
-            
+
             // If the exception you see is an exception you created yourself, make sure to use \`throw new Error("Oops")\` instead of \`throw "Oops"\`,
             // because the javascript environment will only preserve the original stack trace in the first form.
-            
+
             // You can also make sure the debugger pauses the next time this very same exception is thrown by enabling "Pause on caught exception".
             // (Note that it might pause on many other, unrelated exception as well).
-            
+
             // If that all doesn't help you out, feel free to open an issue https://github.com/mobxjs/mobx/issues!
             // `;
 
@@ -233,24 +233,24 @@ export class Reaction implements IDerivation, IReactionPublic {
         return `Reaction[${this.name}]`;
     }
 
-//     whyRun() {
-//         const observing = unique(this._isRunning ? this.newObserving : this.observing).map(
-//             (dep) => dep.name
-//         );
+    //     whyRun() {
+    //         const observing = unique(this._isRunning ? this.newObserving : this.observing).map(
+    //             (dep) => dep.name
+    //         );
 
-//         return `
-// WhyRun? reaction '${this.name}':
-//  * Status: [${this.isDisposed
-//      ? "stopped"
-//      : this._isRunning ? "running" : this.isScheduled() ? "scheduled" : "idle"}]
-//  * This reaction will re-run if any of the following observables changes:
-//     ${joinStrings(observing)}
-//     ${this._isRunning
-//         ? " (... or any observable accessed during the remainder of the current run)"
-//         : ""}
-// 	${getMessage("m038")}
-// `;
-//     }
+    //         return `
+    // WhyRun? reaction '${this.name}':
+    //  * Status: [${this.isDisposed
+    //      ? "stopped"
+    //      : this._isRunning ? "running" : this.isScheduled() ? "scheduled" : "idle"}]
+    //  * This reaction will re-run if any of the following observables changes:
+    //     ${joinStrings(observing)}
+    //     ${this._isRunning
+    //         ? " (... or any observable accessed during the remainder of the current run)"
+    //         : ""}
+    // 	${getMessage("m038")}
+    // `;
+    //     }
 }
 
 function registerErrorHandler(this: any, handler: any) {
@@ -294,10 +294,10 @@ function runReactionsHelper() {
     // we converge to no remaining reactions after a while.
     while (allReactions.length > 0) {
         if (++iterations === MAX_REACTION_ITERATIONS) {
-            if (typeof console !== 'undefined') 
+            if (typeof console !== 'undefined')
                 // tslint:disable-next-line:no-console
                 console.error(
-                `Reaction doesn't converge to a stable state after ${MAX_REACTION_ITERATIONS} iterations.` +
+                    `Reaction doesn't converge to a stable state after ${MAX_REACTION_ITERATIONS} iterations.` +
                     ` Probably there is a cycle in the reactive function: ${allReactions[0]}`
                 );
             allReactions.splice(0); // clear reactions
@@ -314,7 +314,7 @@ function runReactionsHelper() {
 export function isReaction(x: any): x is IReactionPublic {
     //return x instanceof Reaction;
     return x && x.isMXReaction === true;
-} 
+}
 //export const isReaction = createInstanceofPredicate("Reaction", Reaction);
 
 export function setReactionScheduler(fn: (f: () => void) => void) {

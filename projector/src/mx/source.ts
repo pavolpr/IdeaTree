@@ -1,4 +1,4 @@
-import { IDerivation, TrackingState } from "./derivation";
+import { type IDerivation, TrackingState } from "./derivation";
 import { globalState } from "./globalstate";
 //import { invariant } from "./utils";
 import { runReactions } from "./reaction";
@@ -7,7 +7,7 @@ import * as utils from "../utils";
 
 
 export const derivationSet = new utils.ArraySetImplementation<IDerivation, IDerivation>(
-    (a: IDerivation, b: IDerivation) => a === b, 
+    (a: IDerivation, b: IDerivation) => a === b,
     (derivation: IDerivation) => derivation.derId,
     (derivation: IDerivation) => derivation.derId,
     (derivation: IDerivation) => derivation
@@ -198,7 +198,7 @@ export function propagateChanged(source: ISource) {
     const step = derivationSet.step(derivations);
     //TODO: think if we shoud iterate rather normally
     //for(let i = derivations.length - step; i >= 0; i -= step) {
-    for(let i = step - 1, len = derivations.length; i < len; i += step) {
+    for (let i = step - 1, len = derivations.length; i < len; i += step) {
         const d = derivations[i];
         if (d.sourcesState === TrackingState.UpToDate) d.onBecomeStale();
         d.sourcesState = TrackingState.Stale;
@@ -216,7 +216,7 @@ export function propagateChangeConfirmed(source: ISource) {
     const step = derivationSet.step(derivations);
     //TODO: think if we shoud iterate rather normally
     //for(let i = derivations.length - step; i >= 0; i -= step) {
-    for(let i = step - 1, len = derivations.length; i < len; i += step) {
+    for (let i = step - 1, len = derivations.length; i < len; i += step) {
         const d = derivations[i];
         if (d.sourcesState === TrackingState.PossiblyStale)
             d.sourcesState = TrackingState.Stale;
@@ -238,7 +238,7 @@ export function propagateMaybeChanged(source: ISource) {
     const step = derivationSet.step(derivations);
     //TODO: think if we shoud iterate rather normally
     //for(let i = derivations.length - step; i >= 0; i -= step) {
-    for(let i = step - 1, len = derivations.length; i < len; i += step) {
+    for (let i = step - 1, len = derivations.length; i < len; i += step) {
         const d = derivations[i];
         if (d.sourcesState === TrackingState.UpToDate) {
             d.sourcesState = TrackingState.PossiblyStale;

@@ -1,9 +1,9 @@
-import { INodeRef, IReadNode } from "../node";
+import type { INodeRef, IReadNode } from "../node";
 import { RichText, Line, InLine, Space } from "./editorLang";
 import { AtomValue } from "../mx/atom";
 import { ComputedValue } from "../mx/computedvalue";
 import { startBatch, endBatch } from "../mx/source";
-import { Editor } from "../main";
+import type { Editor } from "../main";
 
 const cursorWidth = 2;
 export interface ICursorResult {
@@ -138,7 +138,7 @@ export class Cursor {
             }
         }
 
-        if(e.ctrlKey && !e.shiftKey) {
+        if (e.ctrlKey && !e.shiftKey) {
             switch (e.key) {
                 case "ArrowRight": this.moveWordRight(); break;
                 case "ArrowLeft": this.moveWordLeft(); break;
@@ -151,7 +151,7 @@ export class Cursor {
         console.log("onMouseDown on line", e);
         let line = lineRef.read;
         let token = Line.InLinesCNA.getFirstChild(line)?.read;
-        if(!token) return;
+        if (!token) return;
         //let rtDom = this.editor.node2dom.get(this.editor.richText);
         //let rtRect = rtDom?.getBoundingClientRect(); //maybe offsetTop ?
         //if(!rtRect) return;
@@ -166,7 +166,7 @@ export class Cursor {
         let foundBox: DOMRect;
         let foundToken;
         let foundTextDom: globalThis.Text;
-        
+
         findBox: for (; ;) {
             textDom = this.getTextDom(token);
             if (!textDom)
@@ -178,7 +178,7 @@ export class Cursor {
             boxes = range.getClientRects();
             for (i = 0; i < boxes.length; i++) {
                 let b = boxes[i];
-                if (b.left <= curLeft && curLeft <= b.right 
+                if (b.left <= curLeft && curLeft <= b.right
                     && b.top <= curTop && curTop <= b.bottom) {
                     foundBox = b;
                     foundToken = token;
@@ -188,12 +188,12 @@ export class Cursor {
             }
 
             token = findNextToken(token, true);
-            if (!token) 
+            if (!token)
                 return; //we are at the end
         }
 
-        if (!foundToken)  return;
-        
+        if (!foundToken) return;
+
         e.preventDefault();
         this.originalXOffset = undefined;
         startBatch(); try {
@@ -209,7 +209,7 @@ export class Cursor {
             this.moveTo(token.me, offset - 1);
             return;
         }
-        
+
         let prev = findPrevToken(token, false);
         if (prev) {
             let textLen = (InLine.text(prev) || "").length;
@@ -219,7 +219,7 @@ export class Cursor {
     moveRight() {
         let token = this.token.get()?.read;
         if (!token) return;
-        
+
         let textLen = (InLine.text(token) || "").length;
         let offset = this.nodeCharOffset.get();
         if (offset < textLen) {
@@ -479,26 +479,26 @@ export class Cursor {
         let tokenDom = this.editor.node2dom.get(token.me);
         return tokenDom?.firstChild as globalThis.Text;
     }
-// dgdf  dgf d sdgdsgdsf    
+    // dgdf  dgf d sdgdsgdsf    
     /// sdg sdgs  sdsd sdgsdg   sdgsdg   
     moveWordRight() {
         let token = this.token.get()?.read;
         if (!token) return;
-        
+
         let textLen = (InLine.text(token) || "").length;
         let offset = this.nodeCharOffset.get();
-        if(offset < textLen) {
+        if (offset < textLen) {
             offset = textLen
         } else {
             token = findNextToken(token, false);
             if (!token) return;
             offset = (InLine.text(token) || "").length;
         }
-        
+
         //while space on the same line, take next, if it is on the same line
-        while(token.type.concept instanceof Space) {
+        while (token.type.concept instanceof Space) {
             let next = findNextToken(token, true);
-            if(!next) break;
+            if (!next) break;
             token = next;
             offset = (InLine.text(token) || "").length;
         }
@@ -508,17 +508,17 @@ export class Cursor {
     moveWordLeft() {
         let token = this.token.get()?.read;
         if (!token) return;
-        
+
         let offset = this.nodeCharOffset.get();
-        if(offset === 0) {
+        if (offset === 0) {
             token = findPrevToken(token, false);
             if (!token) return;
         }
 
         //while space on the same line, take prev, if it is on the same line
-        while(token.type.concept instanceof Space) {
+        while (token.type.concept instanceof Space) {
             let prev = findPrevToken(token, true);
-            if(!prev) break;
+            if (!prev) break;
             token = prev;
         }
         this.moveTo(token.me, 0);
@@ -528,14 +528,14 @@ export class Cursor {
         let token = this.token.get()?.read;
         if (!token) return;
         let firstToken = findFirstToken(token);
-        if(!firstToken) return;
+        if (!firstToken) return;
         this.moveTo(firstToken.me, 0);
     }
     moveEnd() {
         let token = this.token.get()?.read;
         if (!token) return;
         let lastToken = findLastToken(token);
-        if(!lastToken) return;
+        if (!lastToken) return;
         let textLen = (InLine.text(lastToken) || "").length;
         this.moveTo(lastToken.me, textLen);
     }
@@ -563,32 +563,32 @@ export class Cursor {
 
 export function findNextToken(token: IReadNode, mustBeOnSameLine: boolean): IReadNode | undefined {
     let next = token.next;
-    if(!next) {
-        if(mustBeOnSameLine) return undefined;
+    if (!next) {
+        if (mustBeOnSameLine) return undefined;
         let nextLine = token.parent?.read?.next?.read;
-        if(nextLine) next = Line.InLinesCNA.getFirstChild(nextLine);
+        if (nextLine) next = Line.InLinesCNA.getFirstChild(nextLine);
     }
     return next?.read;
 }
 export function findPrevToken(token: IReadNode, mustBeOnSameLine: boolean): IReadNode | undefined {
     let prev = token.prev?.read;
-    if(!prev?.next) { //test if the prev is the last ... token was first
-        if(mustBeOnSameLine) return undefined;
+    if (!prev?.next) { //test if the prev is the last ... token was first
+        if (mustBeOnSameLine) return undefined;
         let prevLine = token.parent?.read?.prev?.read;
-        if(!prevLine?.next) return undefined;
+        if (!prevLine?.next) return undefined;
         prev = Line.InLinesCNA.getLastChild(prevLine)?.read;
     }
     return prev;
 }
 export function findLastToken(token: IReadNode): IReadNode | undefined {
     let parent = token.parent?.read;
-    if(parent) 
+    if (parent)
         return Line.InLinesCNA.getLastChild(parent)?.read;
     return undefined;
 }
 export function findFirstToken(token: IReadNode): IReadNode | undefined {
     let parent = token.parent?.read;
-    if(parent) 
+    if (parent)
         return Line.InLinesCNA.getFirstChild(parent)?.read;
     return undefined;
 }

@@ -1,8 +1,8 @@
-import { INodeRef, getGlobalNode, ensureGlobalNode, IWriteNode } from "./node";
+import { type INodeRef, getGlobalNode, ensureGlobalNode, type IWriteNode } from "./node";
 import { makeUid } from "./utils";
 import { globalState, conceptSet } from "./mx/globalstate";
 import { Heap, ensureHeap } from "./heap";
-import { IType, FieldDef, getNodeType, NodeType, FieldAccessor, ChildrenAccessor, /*EmptyType,*/ Int32Type, BoolType, DoubleType, StringType, UaNodeRefType, ChildNodeType, ChildAccessor } from "./type";
+import { type IType, FieldDef, getNodeType, NodeType, FieldAccessor, ChildrenAccessor, /*EmptyType,*/ Int32Type, BoolType, DoubleType, StringType, UaNodeRefType, ChildNodeType, ChildAccessor } from "./type";
 import { ComputedValue } from "./mx/computedvalue";
 
 export const t0langGuid = "36bcda2b-c6ae-4cdc-9eaa-74b4ff839b46";
@@ -43,10 +43,10 @@ export const StyleTermArgDef = ensureGlobalNode(makeUid(globalState.guidMap.gidx
 export const TokenDefDef = ensureGlobalNode(makeUid(globalState.guidMap.gidxFromString(tokenLangGuid), 1));
 
 //export const t0emptyType = new EmptyType(primitiveDef);
-const int32Def = ensureGlobalNode(makeUid(t0gidx, 34) );
-const boolDef = ensureGlobalNode(makeUid(t0gidx, 35) );
-const doubleDef = ensureGlobalNode(makeUid(t0gidx, 36) );
-const stringDef = ensureGlobalNode(makeUid(t0gidx, 37) );
+const int32Def = ensureGlobalNode(makeUid(t0gidx, 34));
+const boolDef = ensureGlobalNode(makeUid(t0gidx, 35));
+const doubleDef = ensureGlobalNode(makeUid(t0gidx, 36));
+const stringDef = ensureGlobalNode(makeUid(t0gidx, 37));
 export const t0int32Type = new Int32Type(int32Def);
 export const t0boolType = new BoolType(boolDef);
 export const t0doubleType = new DoubleType(doubleDef);
@@ -80,7 +80,12 @@ export class LangBuilder {
     langGidx: number;
     langHeap: Heap;
     root: IWriteNode;
-    constructor(readonly langGuid: string, readonly name: string, freeSidx: number) {
+    readonly langGuid: string;
+    readonly name: string;
+
+    constructor(langGuid: string, name: string, freeSidx: number) {
+        this.langGuid = langGuid;
+        this.name = name;
         this.langGidx = globalState.guidMap.gidxFromString(langGuid);
         this.langHeap = ensureHeap(this.langGidx);//new Heap(this.langGidx);
         this.langHeap.setLastUid(makeUid(this.langGidx, freeSidx));
@@ -93,7 +98,7 @@ export class LangBuilder {
     private uid(sidx: number) {
         return makeUid(this.langGidx, sidx);
     }
-    
+
     private defNode(idx: number) {
         const uid = this.uid(idx);
         //if(getGlobalNode(uid) !== undefined) throw new Error("node exists");
@@ -114,7 +119,7 @@ export class LangBuilder {
     // }
 
     private createNodeLikeTypedMember(parentDef: INodeRef, typeNodeType: NodeType, conceptDef: INodeRef,
-          idx: number, name: string) {
+        idx: number, name: string) {
         const origChangeMap = globalState.changeMap;
         globalState.setupEditMode();
 
@@ -232,7 +237,10 @@ export interface IConcept {
 
 export class BaseConcept implements IConcept {
     nodeType: NodeType;
-    constructor(readonly def: INodeRef) {
+    readonly def: INodeRef;
+
+    constructor(def: INodeRef) {
+        this.def = def;
         this.nodeType = getNodeType(def);
         //register concept
         conceptSet.add(globalState.conceptMap, this);
@@ -260,8 +268,8 @@ export function nodeComputedValue<T>(compute: (this: INodeRef) => T) {
 
     return function get(node: INodeRef) {
         let cv = nodeMap.get(node);
-        if(!cv) {
-            if(!globalState.trackingDerivation) return compute.call(node);
+        if (!cv) {
+            if (!globalState.trackingDerivation) return compute.call(node);
             nodeMap.set(node, cv = new NodeComputedValue(node));
         }
         return cv.get();

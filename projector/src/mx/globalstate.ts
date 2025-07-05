@@ -1,12 +1,12 @@
-import { IDerivation } from "./derivation";
-import { Reaction } from "./reaction";
-import { ISource } from "./source";
+import type { IDerivation } from "./derivation";
+import type { Reaction } from "./reaction";
+import type { ISource } from "./source";
 import { GuidMap } from "../guidmap";
 import * as utils from "../utils";
-import { /*circular type-only*/ Node, INodeRef } from "../node";
-import { /*circular type-only*/ Heap, IHeap } from "../heap";
-import { /*circular type-only*/ NodeType } from "../type";
-import { /*circular type-only*/ IConcept } from "../concept";
+import type { Node, INodeRef } from "../node";
+import type { Heap, IHeap } from "../heap";
+import type { NodeType } from "../type";
+import type { IConcept } from "../concept";
 
 /**
  * These values will persist if global state is reset
@@ -37,7 +37,7 @@ export interface IChangeMap {
 export interface IHeapContext {
     readonly heap: IHeap;
     readonly changeMap: IChangeMap;
-    readonly createdNodes: Node[]; 
+    readonly createdNodes: Node[];
 }
 
 // only one change map can be base
@@ -46,14 +46,14 @@ const editChangeMap: IChangeMap = { isBase: false, isEditable: true, _hashCode: 
 
 export class MXGlobals {
     guidMap = new GuidMap();
-    
+
     nodeMap: utils.ArraySet<Node> = [];
     readonly heapMap: utils.ArraySet<Heap> = [];
     readonly heapRoots: utils.ArraySet<Node> = [];
-    readonly nodeTypes: utils.ArraySet<NodeType> = [];    
-    readonly conceptMap: utils.ArraySet<IConcept> = [];    
+    readonly nodeTypes: utils.ArraySet<NodeType> = [];
+    readonly conceptMap: utils.ArraySet<IConcept> = [];
     //readonly nodeFieldInserts: utils.ArraySet<NodeFieldInsert> = [];
-    
+
     /**
      * MobXGlobals version.
      * MobX compatiblity with other versions loaded in memory as long as this version matches.
@@ -131,7 +131,7 @@ export class MXGlobals {
     globalReactionErrorHandlers: ((error: any, derivation: IDerivation) => void)[] = [];
 }
 
-export let globalState: MXGlobals = new MXGlobals();
+export const globalState: MXGlobals = new MXGlobals();
 
 /**
  * 'guid' for general purpose. Will be persisted amongst resets.
@@ -152,7 +152,7 @@ export function invariant(check: boolean, message: string, thing?: any) {
 
 export function ensureCanMutate() {
     // Should never be possible to change an observed observable from inside computed, see #798
-    if (globalState.computationDepth > 0) 
+    if (globalState.computationDepth > 0)
         throwError("Computed values are not allowed to cause side effects.");
     // Should not be possible to change observed state outside strict mode, except during initialization, see #563
     if (!globalState.allowStateChanges)

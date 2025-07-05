@@ -1,11 +1,13 @@
-import { INodeRef, IReadNode } from "../node";
+import type { INodeRef, IReadNode } from "../node";
 import { Projection, ProjectionTerm } from "../core/grammarLang";
-import { Heap } from "../heap";
-import { IRenderContext, ProjectionMap } from "./renderUtils";
+import type { Heap } from "../heap";
+import type { IRenderContext, ProjectionMap } from "./renderUtils";
 
 export class StringRenderContext implements IRenderContext {
-    
-    constructor(readonly projectionMap: ProjectionMap) {
+    readonly projectionMap: ProjectionMap;
+
+    constructor(projectionMap: ProjectionMap) {
+        this.projectionMap = projectionMap;
     }
 
     renderHeap(heap: Heap) {
@@ -13,24 +15,24 @@ export class StringRenderContext implements IRenderContext {
         this.renderNode(heap.root);
         return this.string;
     }
-    
+
     renderNode(nodeRef: INodeRef, sepTerm?: INodeRef) {
         this.clearSeparator(); //just in case?
-        
+
         const node = nodeRef.read;
-        
-        if(sepTerm) {
+
+        if (sepTerm) {
             ProjectionTerm.render(sepTerm.read, node, this); //TODO: ? node should be the parent
         }
 
         const proj = this.projectionMap.projection(node);
-        if(proj == undefined) {
+        if (proj == undefined) {
             this.addToken(`<<no projection, node: ${node}>>`, nodeRef);
             return;
         }
-        
+
         let term = Projection.TermsCNA.getFirstChild(proj)?.read;
-        for(; term != undefined; term = term.next?.read) {
+        for (; term != undefined; term = term.next?.read) {
             ProjectionTerm.render(term, node, this);
         }
     }
@@ -40,9 +42,9 @@ export class StringRenderContext implements IRenderContext {
 
         let isNext = false;
         let node = firstChild?.read;
-        for(; node != undefined; node = node.next?.read) {
-            
-            this.renderNode(node.me, isNext ? sepTerm : undefined); 
+        for (; node != undefined; node = node.next?.read) {
+
+            this.renderNode(node.me, isNext ? sepTerm : undefined);
             isNext = true;
         }
     }
@@ -50,15 +52,15 @@ export class StringRenderContext implements IRenderContext {
     string = ""
     addToken(token: string, _idRef: INodeRef) {
         //TODO
-        if(this.isNewLine) {
+        if (this.isNewLine) {
             this.string += "\n";
-            for(let i = 0; i < this.indent; i++) this.string += "    ";
+            for (let i = 0; i < this.indent; i++) this.string += "    ";
             this.isNewLine = false;
             this.isDropSpace = false;
         }
-        else if(this.isDropSpace) {
+        else if (this.isDropSpace) {
             this.isDropSpace = false;
-        } 
+        }
         else this.string += " ";
         this.string += token;
     }

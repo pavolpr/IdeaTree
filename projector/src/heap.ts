@@ -1,14 +1,15 @@
-import { NodeType } from "./type";
+import { type NodeType } from "./type";
 import {
-    Node, INodeRef, ensureGlobalNode,
-    addHeapRoot, IWriteNodeInternal, IWriteNode, createNode, FieldValue } from "./node";
+    Node, type INodeRef, ensureGlobalNode,
+    addHeapRoot, type IWriteNodeInternal, type IWriteNode, createNode, type FieldValue
+} from "./node";
 import * as utils from "./utils";
-import { globalState, IChangeMap, IHeapContext } from "./mx/globalstate";
+import { globalState, type IChangeMap, type IHeapContext } from "./mx/globalstate";
 
 export const heapSet = new utils.ArraySetImplementation<number, Heap>(
-    (gidx: number, b: Heap) => gidx === b.gidx, 
+    (gidx: number, b: Heap) => gidx === b.gidx,
     (gidx: number) => gidx | 0,
-    (heap: Heap) => heap.gidx | 0, 
+    (heap: Heap) => heap.gidx | 0,
     (gidx: number) => new Heap(gidx)
 );
 
@@ -18,9 +19,9 @@ interface IHeapContextKey {
 }
 
 const heapContextSet = new utils.ArraySetImplementation<IHeapContextKey, HeapContext>(
-    (key: IHeapContextKey, value: HeapContext) => key.changeMap === value.changeMap, 
+    (key: IHeapContextKey, value: HeapContext) => key.changeMap === value.changeMap,
     (key: IHeapContextKey) => key.changeMap._hashCode,
-    (value: HeapContext) => value.changeMap._hashCode, 
+    (value: HeapContext) => value.changeMap._hashCode,
     (key: IHeapContextKey) => new HeapContext(key.heap, key.changeMap)
 );
 
@@ -45,15 +46,15 @@ export class Heap implements IHeap {
     readonly gidx: number;
     readonly root: INodeRef;
     // NOTE: a Node can be a fragment of more Heap-s (even more times) but, a NodeRecord can be fragment of precicely one heap
-    readonly fragments: Node[] = []; 
+    readonly fragments: Node[] = [];
     //readonly nodeTypes: utils.ArraySet<NodeType> = [];    
     //readonly nodeFieldInserts: utils.ArraySet<NodeFieldInsert> = [];
-    
+
     //private nodeTypeKey: INodeTypeKey;
     private heapContexts: utils.ArraySet<HeapContext> = [];
     private heapContextKey: IHeapContextKey;
     private lastUid: utils.Uid;
-    private lastHeapContext: HeapContext; 
+    private lastHeapContext: HeapContext;
 
 
     /*internal*/constructor(gidx: number) {
@@ -61,7 +62,7 @@ export class Heap implements IHeap {
         this.gidx = gidx;
         //heapSet.add(globalState.heapMap, this, true);
         const root = ensureGlobalNode(utils.makeUid(gidx, 0));
-        if(root.hasRecord) {
+        if (root.hasRecord) {
             //TODO: a better guarantee of not re-using a heap's root
             throw new Error("New heap's root already has some content.");
         }
@@ -81,7 +82,7 @@ export class Heap implements IHeap {
         let uid = this.lastUid + 1;
         this.lastUid = utils.getSidx(uid) <= utils.maxSidx
             ? uid
-            : utils.makeUid(globalState.guidMap.newGidx(), 0);    
+            : utils.makeUid(globalState.guidMap.newGidx(), 0);
         return uid;
     }
 
@@ -92,13 +93,13 @@ export class Heap implements IHeap {
     }
 
     createNode(
-        nodeType: NodeType, 
-        content?: FieldValue[], 
-        uid: utils.Uid = this.getNextUid(), 
+        nodeType: NodeType,
+        content?: FieldValue[],
+        uid: utils.Uid = this.getNextUid(),
         changeMap: IChangeMap = globalState.changeMap
     ): IWriteNode {
         let heapContext = this.lastHeapContext;
-        if(heapContext.changeMap !== changeMap) {
+        if (heapContext.changeMap !== changeMap) {
             this.lastHeapContext = heapContext = this.getHeapContext(changeMap);
         }
         return createNode(uid, nodeType, heapContext, content);
@@ -108,11 +109,13 @@ export class Heap implements IHeap {
 
 class HeapContext implements IHeapContext {
     //_hashCode: number;
-    readonly createdNodes: Node[] = []; 
-    constructor(
-        readonly heap: IHeap,
-        readonly changeMap: IChangeMap
-    ) {
+    readonly createdNodes: Node[] = [];
+    readonly heap: IHeap;
+    readonly changeMap: IChangeMap;
+
+    constructor(heap: IHeap, changeMap: IChangeMap) {
+        this.heap = heap;
+        this.changeMap = changeMap;
         //this._hashCode = utils.combineHashCodes(heap.gidx, changeMap._hashCode);
     }
 

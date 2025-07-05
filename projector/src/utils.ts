@@ -280,27 +280,36 @@ export type ArraySet<T> = T[];
 export class ArraySetImplementation<Key, T> {
     wasCreated: boolean = false;
     lastIndex?: number = undefined;
-    
+    readonly equals: (key: Key, value: T) => boolean;
+    readonly hash: (key: Key) => number;
+    readonly hashValue: (value: T) => number;
+    readonly create: (key: Key) => T;
+
     constructor(
-        readonly equals: (key: Key, value: T) => boolean,
-        readonly hash: (key: Key) => number,
-        readonly hashValue: (value: T) => number,
-        readonly create: (key: Key) => T,
-    ) { }
-    
+        equals: (key: Key, value: T) => boolean,
+        hash: (key: Key) => number,
+        hashValue: (value: T) => number,
+        create: (key: Key) => T,
+    ) {
+        this.equals = equals;
+        this.hash = hash;
+        this.hashValue = hashValue;
+        this.create = create;
+    }
+
     // contains(set: ArraySet<T>, value: T): boolean {
     //     return this.get(set, value) !== undefined;
     // }
-    
+
     get(set: ArraySet<T>, key: Key): T | undefined {
-        if(key === undefined) { 
+        if (key === undefined) {
             throw new Error("undefined set key is not allowed.");
         }
         const equals = this.equals;
-        if(set.length <= lengthThreshold) {
-            for(let i = 0; i < set.length; i++) {
+        if (set.length <= lengthThreshold) {
+            for (let i = 0; i < set.length; i++) {
                 const entryValue = set[i];
-                if(equals(key, entryValue)) {
+                if (equals(key, entryValue)) {
                     this.lastIndex = i;
                     return entryValue;
                 }
@@ -308,32 +317,32 @@ export class ArraySetImplementation<Key, T> {
             this.lastIndex = undefined;
             return undefined;
         }
-    
+
         const buckets = set[0] as any as Int32Array;
         const hashCode = this.hash(key) & lower31BitMask;
-        for (let i = buckets[hashCode % buckets.length]; i > 0; ) {
+        for (let i = buckets[hashCode % buckets.length]; i > 0;) {
             const entryValue = set[i];
             if (equals(key, entryValue)) {
-                this.lastIndex = i>>1;
+                this.lastIndex = i >> 1;
                 return entryValue;
             }
-            i = set[i+1] as any as number; // .next;
+            i = set[i + 1] as any as number; // .next;
         }
         this.lastIndex = undefined;
         return undefined;
     }
-    
+
     add(set: ArraySet<T>, key: Key, addOnly = false): T {
-        if(key === undefined) {
+        if (key === undefined) {
             throw new Error("undefined values not supported.");
         }
 
         const equals = this.equals;
         // pure array
-        if(set.length <= lengthThreshold) {
-            for(let i = 0; i < set.length; i++) {
+        if (set.length <= lengthThreshold) {
+            for (let i = 0; i < set.length; i++) {
                 const entryValue = set[i];
-                if(equals(key, entryValue)) {
+                if (equals(key, entryValue)) {
                     if (addOnly) throw new Error(`Adding duplicate value:${key}.`);
                     this.wasCreated = false;
                     this.lastIndex = i;
@@ -344,35 +353,35 @@ export class ArraySetImplementation<Key, T> {
             //INVARIANT: call this.create() before any change of the set, so that eventual exception will do no harm
             const value = this.create(key); // tslint:disable-line:no-shadowed-variable
             const len = set.length;
-            this.lastIndex = len;            
-            if(len < lengthThreshold) {
+            this.lastIndex = len;
+            if (len < lengthThreshold) {
                 set.push(value);
                 return value;
             }
             this.initialize(set, value);
             return value;
         }
-        
+
         // hashed array
         let buckets = set[0] as any as Int32Array;
         const hashCode = this.hash(key) & lower31BitMask;
         let targetBucket = hashCode % buckets.length;
-        
-        for (let i = buckets[targetBucket]; i > 0; ) {
+
+        for (let i = buckets[targetBucket]; i > 0;) {
             const entryValue = set[i];
             if (equals(key, entryValue)) {
                 if (addOnly) throw new Error(`Adding duplicate value:${key}.`);
                 this.wasCreated = false;
-                this.lastIndex = i >> 1;            
+                this.lastIndex = i >> 1;
                 return entryValue;
             }
-            i = set[i+1] as any as number; // .next;
+            i = set[i + 1] as any as number; // .next;
         }
 
         this.wasCreated = true;
         //INVARIANT: call this.create() before any change of the set, so that eventual exception will do no harm
         const value = this.create(key);
-        
+
         const count = set.length >> 1;
         this.lastIndex = count;
         if (count === buckets.length) { // and buckets.length == size, so count === size
@@ -391,7 +400,7 @@ export class ArraySetImplementation<Key, T> {
         //INVARIANT: newSize is a prime already, and newSize > count
         const buckets = new Int32Array(newSize);
         set[0] = buckets as any;
-        
+
         // redistribute all entries
         for (let i = 1; i < set.length; i += 2) {
             const entryValue = set[i];
@@ -404,30 +413,30 @@ export class ArraySetImplementation<Key, T> {
     private initialize(set: ArraySet<T>, value: T) {
         //INVARIANT: set.length === lengthThreshold
         // move the second half
-        for(let i = lengthThreshold; i <= (lengthThreshold << 1); i++) {
-            set.push( (i & 1) === 0 ? 0 as any : set[i >> 1] );
+        for (let i = lengthThreshold; i <= (lengthThreshold << 1); i++) {
+            set.push((i & 1) === 0 ? 0 as any : set[i >> 1]);
         }
         set.push(value);
         set.push(0 as any); //next
         // move the first half
-        for(let i = lengthThreshold - 1; i > 0; i--) {
+        for (let i = lengthThreshold - 1; i > 0; i--) {
             set[i] = (i & 1) === 0 ? 0 as any : set[i >> 1];
         }
-        
+
         this.resize(set, initialSize);
     }
-    
+
     remove(set: ArraySet<T>, key: Key): T | undefined {
-        if(key === undefined) {
+        if (key === undefined) {
             throw new Error("undefined set value is not allowed.");
         }
         const equals = this.equals;
-        if(set.length <= lengthThreshold) {
-            for(let i = 0; i < set.length; i++) {
+        if (set.length <= lengthThreshold) {
+            for (let i = 0; i < set.length; i++) {
                 const entryValue = set[i];
-                if(equals(key, entryValue)) {
+                if (equals(key, entryValue)) {
                     const lastValue = set.pop() as T;
-                    if(i < set.length) {
+                    if (i < set.length) {
                         set[i] = lastValue;
                     }
                     return entryValue;
@@ -440,7 +449,7 @@ export class ArraySetImplementation<Key, T> {
         const hashCode = this.hash(key) & lower31BitMask;
         let bucket = hashCode % buckets.length;
         let last = 0;
-        for (let i = buckets[bucket]; i > 0; ) {
+        for (let i = buckets[bucket]; i > 0;) {
             const entryValue = set[i];
             if (this.equals(key, entryValue)) {
                 if (last > 0) {
@@ -451,29 +460,29 @@ export class ArraySetImplementation<Key, T> {
                 const lastNext = set.pop() as any as number;
                 const lastValue = set.pop() as T;
                 const lastIdx = set.length;
-                if(lastIdx <= lengthThreshold) { //should be actually < ; 7 for threshold 8
-                    if(i < lastIdx) set[i] = lastValue as T; // fill the hole with the last value
-                    for(i = 1; i < lastIdx; i += 2) {
+                if (lastIdx <= lengthThreshold) { //should be actually < ; 7 for threshold 8
+                    if (i < lastIdx) set[i] = lastValue as T; // fill the hole with the last value
+                    for (i = 1; i < lastIdx; i += 2) {
                         set[i >> 1] = set[i];
                     }
                     set.length = lastIdx >> 1; //3 elements when threshold is 8
-                } else if(initialSize <= lastIdx && (lastIdx << 1) < buckets.length) {
+                } else if (initialSize <= lastIdx && (lastIdx << 1) < buckets.length) {
                     // downsize, when count <=~ bucket.length / 4
-                    if(i < lastIdx) set[i] = lastValue as T; // fill the hole with the last value
+                    if (i < lastIdx) set[i] = lastValue as T; // fill the hole with the last value
                     //const newSize = lastIdx;
                     this.resize(set, getPrime(lastIdx));
-                } else if(i < lastIdx) {
+                } else if (i < lastIdx) {
                     // replace the original with the last one
                     set[i] = lastValue; // fill the hole with the last value
                     set[i + 1] = lastNext as any;
                     bucket = (this.hashValue(lastValue) & lower31BitMask) % buckets.length;
                     let ii = buckets[bucket];
-                    if(ii === lastIdx) {
+                    if (ii === lastIdx) {
                         buckets[bucket] = i;
                     } else {
-                        while(ii > 0) {
+                        while (ii > 0) {
                             const nextIi = set[ii + 1] as any as number;
-                            if(nextIi === lastIdx) {
+                            if (nextIi === lastIdx) {
                                 set[ii + 1] = i as any;
                                 return entryValue;
                             }
@@ -496,7 +505,7 @@ export class ArraySetImplementation<Key, T> {
     count(set: ArraySet<T>): number {
         return set.length <= lengthThreshold ? set.length : set.length >> 1;
     }
-    
+
 }
 
 
@@ -518,9 +527,9 @@ export function combineHashCodes(h1: number, h2: number): number {
     //0, h1 => seed  
     //seed, h2 => seed
 
-    const seed = ((h1|0) + addBase) | 0;
+    const seed = ((h1 | 0) + addBase) | 0;
     //seed ^= h2 + addBase + (seed << 6) + (seed >> 2);
-    return (seed ^ ((h2|0) + addBase + (seed << 6) + (seed >> 2))) | 0; 
+    return (seed ^ ((h2 | 0) + addBase + (seed << 6) + (seed >> 2))) | 0;
 }
 
 
@@ -560,13 +569,13 @@ export type Uid = number;
 //   when qidx <= 16 bits, both fits nicely in 30bits (+1 for positive 31bits, which are optimized by 32bit runtimes)
 export const maxSidx = (1 << 14) - 1;
 export function makeUid(gidx: number, sidx: number): Uid {
-    const si = (sidx|0);
-    if(si !== sidx || si < 0 || si >= (1 << 14)) 
+    const si = (sidx | 0);
+    if (si !== sidx || si < 0 || si >= (1 << 14))
         throw new Error(`Invalid sidx, it is not an integer in the range 0..16383, sidx=${sidx}, sidx|0=${si}`);
-    const gi = (gidx|0);
-    if(gi !== gidx || gi < 0)
+    const gi = (gidx | 0);
+    if (gi !== gidx || gi < 0)
         throw new Error(`Invalid gidx, it is not an integer in the range 0..2097151, gidx=${gidx}, gidx|0=${gi}`);
-    if(gi < (1<<17))
+    if (gi < (1 << 17))
         return (gi << 14) + si;
     return gi * (1 << 14) + si;
 }
@@ -574,7 +583,7 @@ export function makeUid(gidx: number, sidx: number): Uid {
 const divideByTwoTo14 = 1 / (1 << 14);
 export function getGidx(uid: Uid): number {
     const u = uid | 0;
-    if(u  === uid)
+    if (u === uid)
         return u >> 14;
     return (uid * divideByTwoTo14) | 0;
 }

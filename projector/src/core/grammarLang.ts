@@ -360,8 +360,8 @@ import { LangBuilder, BaseConcept, conceptStructureMemberDefDef, grammarLangGuid
 import { tINamedDef, tIConceptMemberDef, tILangDefinition, tINamed, tILangDefinitionDef, tIConceptMember, conceptOrTraitDefDef, ConceptStructureMemberDef, TokenTypeDef } from "./structureLang";
 import { mix } from "../mixins";
 import { getSidx } from "../utils";
-import { IReadNode, INodeRef } from "../node";
-import { IRenderContext } from "../editor/renderUtils";
+import type { IReadNode, INodeRef } from "../node";
+import type { IRenderContext } from "../editor/renderUtils";
 import { hasStyle, setStyle } from "../mx/styles";
 
 const lb = new LangBuilder(grammarLangGuid, "Grammar", 90);
@@ -455,13 +455,13 @@ export class StructureMemberTerm extends ProjectionTerm {
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         const member = StructureMemberTerm.MemberFA.get(thisTerm);
         const type = ConceptStructureMemberDef.TypeCA.getChild(member?.read!)?.read;
-        if(type?.def == singleChildTypeDef) {
+        if (type?.def == singleChildTypeDef) {
             ctx.renderNode(node.getFirstChild(member!)!);
         }
-        else if(type?.def == childrenTypeDef) {
+        else if (type?.def == childrenTypeDef) {
             ctx.renderChildren(node.getFirstChild(member!)!);
         }
-        else if(type?.def == stringTypeDef || type?.def == TokenTypeDef) {
+        else if (type?.def == stringTypeDef || type?.def == TokenTypeDef) {
             ctx.renderField(node, member!, thisTerm.me);
         }
         else {
@@ -484,7 +484,7 @@ export class ParenthesizedTerm extends ProjectionTerm {
 
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         let term = ParenthesizedTerm.TermsCNA.getFirstChild(thisTerm)?.read;
-        for(; term != undefined; term = term.next?.read) {
+        for (; term != undefined; term = term.next?.read) {
             ProjectionTerm.render(term, node, ctx);
         }
     }
@@ -493,7 +493,7 @@ lb.subTypeAsMember(ProjectionTermDef, ParenthesizedTermDef);
 export class DropSpaceTerm extends ProjectionTerm {
     static Def = new DropSpaceTerm(DropSpaceTermDef);
 
-    renderVirt(_thisTerm: IReadNode, _node: IReadNode, ctx: IRenderContext) { 
+    renderVirt(_thisTerm: IReadNode, _node: IReadNode, ctx: IRenderContext) {
         ctx.dropSpace();
     }
 }
@@ -501,7 +501,7 @@ lb.subTypeAsMember(ProjectionTermDef, DropSpaceTermDef);
 export class StartNewLineTerm extends ProjectionTerm {
     static Def = new StartNewLineTerm(StartNewLineTermDef);
 
-    renderVirt(_thisTerm: IReadNode, _node: IReadNode, ctx: IRenderContext) { 
+    renderVirt(_thisTerm: IReadNode, _node: IReadNode, ctx: IRenderContext) {
         ctx.startNewLine();
     }
 }
@@ -509,12 +509,12 @@ lb.subTypeAsMember(ProjectionTermDef, StartNewLineTermDef);
 export class IndentedBlockTerm extends ProjectionTerm {
     static Def = new IndentedBlockTerm(IndentedBlockTermDef);
     static TermsCNA = lb.childrenAccessor(IndentedBlockTermDef, ProjectionTermDef, 52, "terms", true);
-    
+
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         ctx.startNewLine();
         ctx.addIndent();
         let term = IndentedBlockTerm.TermsCNA.getFirstChild(thisTerm)?.read;
-        for(; term != undefined; term = term.next?.read) {
+        for (; term != undefined; term = term.next?.read) {
             ProjectionTerm.render(term, node, ctx);
         }
         ctx.subIndent();
@@ -531,9 +531,9 @@ export class ReferenceTerm extends ProjectionTerm {
         const structureMemberTerm = ReferenceTerm.MemberTermCA.getChild(thisTerm)?.read;
         const member = StructureMemberTerm.MemberFA.get(structureMemberTerm!);
         const type = ConceptStructureMemberDef.TypeCA.getChild(member?.read!)?.read;
-        if(type?.def == nodeRefTypeDef) {
+        if (type?.def == nodeRefTypeDef) {
             const field = node.getField(member!) as INodeRef | undefined;
-            if(field != undefined) {
+            if (field != undefined) {
                 const refedNode = field.read;
                 const projTerm = ReferenceTerm.ProjectionTermCA.getChild(thisTerm)?.read;
                 ProjectionTerm.render(projTerm!, refedNode, ctx);
@@ -553,16 +553,16 @@ export class ParameterizedTerm extends ProjectionTerm {
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         let arg = ParameterizedTerm.ArgumentsCNA.getFirstChild(thisTerm)?.read;
         const prevStyles = ctx.styles;
-        for(; arg != undefined; arg = arg.next?.read) {
-            if(arg.def == StyleTermArgDef) {
+        for (; arg != undefined; arg = arg.next?.read) {
+            if (arg.def == StyleTermArgDef) {
                 ctx.pushStyle(StyleTermArg.StyleFA.get(arg)!);
             }
-            else if(arg.def == SeparatorTermArgDef) {
+            else if (arg.def == SeparatorTermArgDef) {
                 ctx.setSeparator(SeparatorTermArg.TermCA.getChild(arg)!);
             }
         }
         const term = ParameterizedTerm.TermCA.getChild(thisTerm)?.read;
-        ProjectionTerm.render(term!, node, ctx);   
+        ProjectionTerm.render(term!, node, ctx);
         ctx.popStyle(prevStyles);
         ctx.clearSeparator();
     }
@@ -574,10 +574,10 @@ export class ZeroOrMoreTerm extends ProjectionTerm {
 
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         let term = ZeroOrMoreTerm.TermCA.getChild(thisTerm)?.read;
-        if(term?.def == StructureMemberTermDef) {
+        if (term?.def == StructureMemberTermDef) {
             const member = StructureMemberTerm.MemberFA.get(term)?.read;
             const type = ConceptStructureMemberDef.TypeCA.getChild(member!)?.read;
-            if(type?.def == childrenTypeDef) {
+            if (type?.def == childrenTypeDef) {
                 ctx.renderChildren(node.getFirstChild(member?.me!));
                 return;
             }
@@ -592,10 +592,10 @@ export class OneOrMoreTerm extends ProjectionTerm {
 
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         let term = OneOrMoreTerm.TermCA.getChild(thisTerm)?.read;
-        if(term?.def == StructureMemberTermDef) {
+        if (term?.def == StructureMemberTermDef) {
             const member = StructureMemberTerm.MemberFA.get(term)?.read;
             const type = ConceptStructureMemberDef.TypeCA.getChild(member!)?.read;
-            if(type?.def == childrenTypeDef) {
+            if (type?.def == childrenTypeDef) {
                 ctx.renderChildren(node.getFirstChild(member?.me!));
                 return;
             }
@@ -612,17 +612,17 @@ export class OptionalTerm extends ProjectionTerm {
     renderVirt(thisTerm: IReadNode, node: IReadNode, ctx: IRenderContext) {
         let condition = OptionalTerm.ConditionCA.getChild(thisTerm)?.read;
         const isNot = condition?.def == NotExprDef;
-        if(isNot) {
+        if (isNot) {
             condition = NotExpr.OperandCA.getChild(condition!)?.read;
         }
 
         //let term = StructureMemberRefTCExpr.MemberFA.getChild(thisTerm)?.read;
-        if(condition?.def == StructureMemberRefTCExprDef) {
+        if (condition?.def == StructureMemberRefTCExprDef) {
             const member = StructureMemberRefTCExpr.MemberFA.get(condition)?.read;
             const type = ConceptStructureMemberDef.TypeCA.getChild(member!)?.read;
             const isChild = type?.def == singleChildTypeDef || type?.def == childrenTypeDef;
             const hasMember = node.getField(member?.me!, isChild) != undefined;
-            if(hasMember != isNot) {
+            if (hasMember != isNot) {
                 const term = OptionalTerm.TermCA.getChild(thisTerm)?.read;
                 ProjectionTerm.render(term!, node, ctx);
             }
@@ -684,11 +684,11 @@ export class StyleDef extends mix(BaseConcept, tINamed.M, tILangDefinition.M) {
 
     static getClassName(node: IReadNode) {
         let key = tINamed.NameFA.get(node) + "_" + node.uid;
-        if(hasStyle(key)) return key;
+        if (hasStyle(key)) return key;
 
         let style = {};
         let attr = this.AttributesCNA.getFirstChild(node)?.read;
-        for(; attr != undefined; attr = attr.next?.read) {
+        for (; attr != undefined; attr = attr.next?.read) {
             (attr.type.concept as StyleAttribute).setStyleAttrVirt(attr, style);
         }
 
@@ -700,12 +700,12 @@ export class StyleDef extends mix(BaseConcept, tINamed.M, tILangDefinition.M) {
 lb.hasTrait(StyleDefDef, tINamedDef);
 lb.hasTrait(StyleDefDef, tILangDefinitionDef);
 
-type StyleRecord = Record<string, any>; 
+type StyleRecord = Record<string, any>;
 
 export class StyleAttribute extends BaseConcept {
     static Def = new StyleAttribute(StyleAttributeDef);
-    
-    setStyleAttrVirt(_node: IReadNode, _style: StyleRecord): void { 
+
+    setStyleAttrVirt(_node: IReadNode, _style: StyleRecord): void {
         //throw "abstract"; 
     }
 }
@@ -713,11 +713,11 @@ export class FontWeightStyleAttr extends StyleAttribute {
     static Def = new FontWeightStyleAttr(FontWeightStyleAttrDef);
     static WeightCA = lb.childAccessor(FontWeightStyleAttrDef, FontWeightDef, 66, "weight");
 
-    setStyleAttrVirt(node: IReadNode, style: StyleRecord): void { 
+    setStyleAttrVirt(node: IReadNode, style: StyleRecord): void {
         let weight = FontWeightStyleAttr.WeightCA.getChild(node)?.read;
-        if(weight?.def === BoldFontWeightDef) {
+        if (weight?.def === BoldFontWeightDef) {
             style.fontWeight = "bold";
-        } else if(weight?.def === NormalFontWeightDef) {
+        } else if (weight?.def === NormalFontWeightDef) {
             style.fontWeight = "normal";
         }
     }
@@ -727,11 +727,11 @@ export class FontStyleStyleAttr extends StyleAttribute {
     static Def = new FontStyleStyleAttr(FontStyleStyleAttrDef);
     static StyleCA = lb.childAccessor(FontStyleStyleAttrDef, FontStyleDef, 67, "style");
 
-    setStyleAttrVirt(node: IReadNode, style: StyleRecord): void { 
+    setStyleAttrVirt(node: IReadNode, style: StyleRecord): void {
         let fontStyle = FontStyleStyleAttr.StyleCA.getChild(node)?.read;
-        if(fontStyle?.def === ItalicFontStyleDef) {
+        if (fontStyle?.def === ItalicFontStyleDef) {
             style.fontStyle = "italic";
-        } else if(fontStyle?.def === NormalFontStyleDef) {
+        } else if (fontStyle?.def === NormalFontStyleDef) {
             style.fontStyle = "normal";
         }
     }
@@ -741,13 +741,13 @@ export class ColorStyleAttr extends StyleAttribute {
     static Def = new ColorStyleAttr(ColorStyleAttrDef);
     static ColorCA = lb.childAccessor(ColorStyleAttrDef, ColorExprDef, 68, "color");
 
-    setStyleAttrVirt(node: IReadNode, style: StyleRecord): void { 
+    setStyleAttrVirt(node: IReadNode, style: StyleRecord): void {
         let color = ColorStyleAttr.ColorCA.getChild(node)?.read;
-        if(color?.def === ColorDefRefDef) {
+        if (color?.def === ColorDefRefDef) {
             let colorDef = ColorDefRef.ColorFA.get(color)?.read;
             let rgb = ColorDef.ColorFA.get(colorDef!);
             style.color = rgb;
-        } else if(color?.def === ColorRGBDef) {
+        } else if (color?.def === ColorRGBDef) {
             let rgb = ColorRGB.HexValueFA.get(color);
             style.color = rgb;
         }

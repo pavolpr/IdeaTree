@@ -1,44 +1,48 @@
-import { ISource, /*IDepTreeNode,*/ addDerivation, removeDerivation } from "./source";
+import { type ISource, /*IDepTreeNode,*/ addDerivation, removeDerivation } from "./source";
 //import { IAtom } from "./atom";
 import { globalState } from "./globalstate";
 //import { fail } from "./utils";
 import { isComputedValue } from "./computedvalue";
 //import { getMessage } from "../utils/messages";
 
-export const enum TrackingState {
+export const TrackingState = {
     // before being run or (outside batch and not being observed)
     // at this point derivation is not holding any data about dependency tree
-    NotTracking = 0, //-1,
+    NotTracking: 0, //-1,
     // no shallow dependency changed since last computation
     // won't recalculate derivation
     // this is what makes mobx fast
-    UpToDate = 1, //0,
+    UpToDate: 1, //0,
     // some deep dependency changed, but don't know if shallow dependency changed
     // will require to check first if UP_TO_DATE or POSSIBLY_STALE
     // currently only ComputedValue will propagate POSSIBLY_STALE
     //
     // having this state is second big optimization:
     // don't have to recompute on every dependency change, but only when it's needed
-    PossiblyStale = 2, //1,
+    PossiblyStale: 2, //1,
     // A shallow dependency has changed since last computation and the derivation
     // will need to recompute when it's needed next.
-    Stale = 3,//2
-}
-export const enum TrackingStateMasks {
-    stateMask             = 3, //0b000000_0011, //2 bits
-    hiStateMask           = 12,//0b000000_1100, //2 bits
-    hiStateShift  = 2,
+    Stale: 3,//2
+} as const;
+export type TrackingState = typeof TrackingState[keyof typeof TrackingState];
 
-    diffValueBit          = 1 << 4,//0b000001_0000, //16
-    isPendingUntrackedBit = 1 << 5,//0b000010_0000, //32
-    isComputingBit        = 1 << 6,//0b000100_0000, //64
-    isDisposedBit         = 1 << 7,//0b001000_0000, //128
-    isScheduledBit        = 1 << 8,//0b010000_0000, //256
-    hasAtomValueBit       = 1 << 9,//0b100000_0000, //512
-    isTrackPendingBit     = 1 <<10,//0b100000_0000, //1024
+export const TrackingStateMasks = {
+    stateMask: 3, //0b000000_0011, //2 bits
+    hiStateMask: 12,//0b000000_1100, //2 bits
+    hiStateShift: 2,
+
+    diffValueBit: 1 << 4,//0b000001_0000, //16
+    isPendingUntrackedBit: 1 << 5,//0b000010_0000, //32
+    isComputingBit: 1 << 6,//0b000100_0000, //64
+    isDisposedBit: 1 << 7,//0b001000_0000, //128
+    isScheduledBit: 1 << 8,//0b010000_0000, //256
+    hasAtomValueBit: 1 << 9,//0b100000_0000, //512
+    isTrackPendingBit: 1 << 10,//0b100000_0000, //1024
     //IsTransformedToEditableNodeBit       
     //                     = 1 << 10,//0b1000000_0000, //1024
-}
+} as const;
+export type TrackingStateMasks = typeof TrackingStateMasks[keyof typeof TrackingStateMasks];
+
 /**
  * A derivation is everything that can be derived from the state (all the atoms) in a pure manner.
  * See https://medium.com/@mweststrate/becoming-fully-reactive-an-in-depth-explanation-of-mobservable-55995262a254#.xvbh6qd74
@@ -62,8 +66,9 @@ export interface IDerivation /*extends IDepTreeNode*/ {
 }
 
 export class CaughtException {
-    constructor(public cause: any) {
-        // Empty
+    cause: any;
+    constructor(cause: any) {
+        this.cause = cause;
     }
 }
 
@@ -161,7 +166,7 @@ function bindDependencies(derivation: IDerivation, prevSources: ISource[]) {
 
     //const prevSources = derivation.sources;
     const sources = derivation.sources; // = derivation.newSources!);
-    let lowestNewObservingDerivationState = TrackingState.UpToDate;
+    let lowestNewObservingDerivationState: TrackingState = TrackingState.UpToDate;
 
 
     // Go through all new sources and check diffValue: (this list can contain duplicates):
@@ -230,8 +235,8 @@ export function clearSources(derivation: IDerivation) {
 
 export function replaceSource(derivation: IDerivation, original: ISource, newSource: ISource): boolean {
     const sources = derivation.sources;
-    for(let i = 0; i < sources.length; i++) {
-        if(sources[i] === original) {
+    for (let i = 0; i < sources.length; i++) {
+        if (sources[i] === original) {
             sources[i] = newSource;
             //NOTE: we are replacing only the first one ... make sure we are not calling this when computing sources for s derivation
             return true;

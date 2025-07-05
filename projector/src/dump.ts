@@ -1,8 +1,8 @@
-import { IHeap } from "./heap";
-import { IChangeMap, globalState } from "./mx/globalstate";
-import { ArraySetImplementation, ArraySet, getGidx, getSidx, Uid } from "./utils";
+import { type IHeap } from "./heap";
+import { type IChangeMap, globalState } from "./mx/globalstate";
+import { ArraySetImplementation, type ArraySet, getGidx, getSidx, type Uid } from "./utils";
 import { NodeType, typeEquals, TypeKind, RefType, RefKind, PrimitiveType, PrimitiveKind } from "./type";
-import { INodeRefInternal, INodeRef, IReadNodeInternal, ContentValue } from "./node";
+import { type INodeRefInternal, type INodeRef, type IReadNodeInternal, type ContentValue } from "./node";
 import { isAtomValue } from "./mx/atom";
 
 const dumpNodeTypeSet = new ArraySetImplementation<NodeType, NodeType>(
@@ -12,9 +12,10 @@ const dumpNodeTypeSet = new ArraySetImplementation<NodeType, NodeType>(
     (key: NodeType) => key
 );
 
-const enum DumpTypeKind {
-    Unsupported = 0, Bool = 1, Int32 = 2, Double = 3, String = 4, UaNodeRef = 5, ChildNode = 6
-}
+export const DumpTypeKind = {
+    Unsupported: 0, Bool: 1, Int32: 2, Double: 3, String: 4, UaNodeRef: 5, ChildNode: 6
+} as const;
+export type DumpTypeKind = typeof DumpTypeKind[keyof typeof DumpTypeKind];
 
 export class HeapDump {
     readonly nodeTypes: ArraySet<NodeType> = [];
@@ -23,12 +24,14 @@ export class HeapDump {
     //readonly guidMap: GuidMap = new GuidMap();
     readonly guidIndexes: { [gidx: number]: number } = {};
     readonly guids: string[] = [];
-
     readonly result: any[] = [];
-    constructor(
-        readonly heap: IHeap,
-        readonly changeMap: IChangeMap
-    ) { }
+    readonly heap: IHeap;
+    readonly changeMap: IChangeMap;
+
+    constructor(heap: IHeap, changeMap: IChangeMap) {
+        this.heap = heap;
+        this.changeMap = changeMap;
+    }
 
     dump(): any[] {
         // "v1", [guids], [types], heap.gidx
@@ -44,9 +47,9 @@ export class HeapDump {
         const changeMap = this.changeMap;
         const fragmentLenIdx = result.length;
         result.push(0);
-        for(const fragment of fragments) {
+        for (const fragment of fragments) {
             //const readFragment = fragment.me.readNode(changeMap, true);
-            if(fragment._heapContext!.changeMap === changeMap || fragment.me.readNode(changeMap, true) === fragment) {
+            if (fragment._heapContext!.changeMap === changeMap || fragment.me.readNode(changeMap, true) === fragment) {
                 this.dumpNode(fragment);
                 result[fragmentLenIdx]++;
             }
@@ -59,19 +62,19 @@ export class HeapDump {
         //if(node === undefined) return undefined;
         const type = node._type!;
         dumpNodeTypeSet.add(this.nodeTypes, type);
-        if(dumpNodeTypeSet.wasCreated) {
+        if (dumpNodeTypeSet.wasCreated) {
             this.dumpNodeType(type);
         }
         const typeIndex = dumpNodeTypeSet.lastIndex;
         const result = this.result;
         result.push(typeIndex);
-        
+
         //1. values
         const content = node._content!;
         const fields = type.fields;
-        for(let i = 0; i < fields.length; i++) {
+        for (let i = 0; i < fields.length; i++) {
             const field = fields[i];
-            switch(field.type.kind) {
+            switch (field.type.kind) {
                 //case TypeKind.ChildNode: continue;
                 case TypeKind.Ref:
                     this.dumpUid((rawValue(content[i]) as INodeRef).uid, result);
@@ -81,12 +84,12 @@ export class HeapDump {
                     result.push(rawValue(content[i]));
             }
         }
-        
+
         //2. children: (children.length, child*)
         const changeMap = this.changeMap;
-        for(let i = 0; i < fields.length; i++) {
+        for (let i = 0; i < fields.length; i++) {
             const field = fields[i];
-            if(field.type.kind !== TypeKind.ChildNode) continue;
+            if (field.type.kind !== TypeKind.ChildNode) continue;
             // children.length
             const childLenIdx = result.length;
             result.push(0);
@@ -100,7 +103,7 @@ export class HeapDump {
                 this.dumpNode(child);
                 result[childLenIdx]++;
                 childRef = child._next;
-            } while(childRef !== undefined);
+            } while (childRef !== undefined);
         }
         return node._next;
     }
@@ -113,15 +116,15 @@ export class HeapDump {
         const fields = type.fields;
         this.types.push(fields.length);
         //2. fields: (fieldUid, field-dump-kind) * length
-        for(const field of fields) {
+        for (const field of fields) {
             //field.uid
             this.dumpUid(field.uid, types);
             //field dump kind
             const fieldType = field.type;
             let dumpKind: DumpTypeKind | undefined;
-            switch(fieldType.kind) {
+            switch (fieldType.kind) {
                 case TypeKind.Primitive:
-                    switch((fieldType as PrimitiveType).primitiveKind) {
+                    switch ((fieldType as PrimitiveType).primitiveKind) {
                         case PrimitiveKind.Bool:
                             dumpKind = DumpTypeKind.Bool;
                             break;
@@ -137,7 +140,7 @@ export class HeapDump {
                     dumpKind = DumpTypeKind.String;
                     break;
                 case TypeKind.Ref:
-                    if((fieldType as RefType).refKind === RefKind.UaNode) {
+                    if ((fieldType as RefType).refKind === RefKind.UaNode) {
                         dumpKind = DumpTypeKind.UaNodeRef;
                     }
                     break;
@@ -145,7 +148,7 @@ export class HeapDump {
                     dumpKind = DumpTypeKind.ChildNode;
                     break;
             }
-            if(dumpKind === undefined) {
+            if (dumpKind === undefined) {
                 throw new Error(`Unsupported field type:${fieldType}`);
             }
             types.push(dumpKind);

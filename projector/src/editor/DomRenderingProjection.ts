@@ -1,17 +1,18 @@
-import { INodeRef } from "../node";
+import type { INodeRef } from "../node";
 import { Heap } from "../heap";
 import { ProjectionMap } from "./renderUtils";
-import { ProjectedNodeTT, ITokenElement, TokenTree, TokenConst } from "./tokenElement";
+import { ProjectedNodeTT, type ITokenElement, TokenTree, TokenConst } from "./tokenElement";
 import { Reaction } from "../mx/reaction";
 import { changeSourcesStateToUpToDate, TrackingState } from "../mx/derivation";
 import { DomRenderContext } from "./DomRenderContext";
 import { DomCursor } from "./DomCursor";
 
 export class DomRenderingProjection extends Reaction {
-    constructor(
-        readonly projectionMap: ProjectionMap        
-    ) {
+    readonly projectionMap: ProjectionMap;
+
+    constructor(projectionMap: ProjectionMap) {
         super(undefined);
+        this.projectionMap = projectionMap;
         this.dom = document.createElement("div");
         this.dom.style.position = "relative";
 
@@ -19,11 +20,11 @@ export class DomRenderingProjection extends Reaction {
         this.lines = document.createElement("div");
         this.lines.onclick = (e) => {
             const target = e.target as HTMLElement;
-            if(target.tagName === "SPAN") {
+            if (target.tagName === "SPAN") {
                 const tt = this.span2TE.get(target);
-                if(tt) {
+                if (tt) {
                     const viewRect = this.dom.getBoundingClientRect();
-                    cursor.click(e,  tt, viewRect);                    
+                    cursor.click(e, tt, viewRect);
                 }
             }
         };
@@ -31,7 +32,7 @@ export class DomRenderingProjection extends Reaction {
         this.currentLine = this.lines.appendChild(document.createElement("div"));
         //always present empty span on the first line to serve as the previous span for the first token
         this.addSpan(""); //maybe we can consider null as the "start" of all spans
-        
+
         this.dom.appendChild(cursor.dom);
         this.dom.appendChild(this.lines);
     }
@@ -50,30 +51,30 @@ export class DomRenderingProjection extends Reaction {
 
     onInvalidate() {
         changeSourcesStateToUpToDate(this);
-        
+
         //re-render
-        for(;;) {
+        for (; ;) {
             if (this.invalidatedTTs.length > 1) {
                 this.invalidatedTTs.sort(compareTrees);
             }
-        
+
             let deletedCount = 0;
             for (let i = 0; i < this.invalidatedTTs.length; i++) {
                 const tt = this.invalidatedTTs[i];
-                if(tt.isDeleted()) {
+                if (tt.isDeleted()) {
                     this.invalidatedTTs[deletedCount++] = tt;
                 } else {
                     tt.runReaction();
                 }
             }
-            if(this.invalidatedTTs.length === deletedCount || deletedCount === 0)
+            if (this.invalidatedTTs.length === deletedCount || deletedCount === 0)
                 break;
             this.invalidatedTTs.length = deletedCount;
         }
         this.invalidatedTTs.length = 0;
-        
+
         //dispose and remove DOM
-        for(const [tt, delIdx] of this.deletedMap) {
+        for (const [tt, delIdx] of this.deletedMap) {
             tt.deleteChildren(delIdx);
         }
         this.deletedMap.clear();
@@ -95,7 +96,7 @@ export class DomRenderingProjection extends Reaction {
 
         if (!indent)
             return null;
-        
+
         this.addSpan(this.getSpanText(indent), indentClassName);
     }
     getSpanText(indent: number) {
@@ -122,26 +123,26 @@ export class DomRenderingProjection extends Reaction {
     moveRange(ttBeforeSpan: ChildNode, ttEndSpan: ChildNode) {
         const startSpan = this.span;
         let ttSpan: ChildNode | null = ttBeforeSpan;
-        if(ttSpan === startSpan) return; //already in-place; this can happen when only empty tt-s are preceding the moved tt
+        if (ttSpan === startSpan) return; //already in-place; this can happen when only empty tt-s are preceding the moved tt
         ttSpan = nextSpan(ttSpan)!; //move on the start tt span
-        
+
         let nextSpanOnStartLine = startSpan!.nextSibling;
         let ttLine: ChildNode | null = ttSpan.parentElement;
-        
+
         //checking of previousSibling should be enough, because if it is get by nextSpan()
         //it is the same as !isFirstToken(ttSpan) here
-        if(ttSpan.previousSibling) { 
+        if (ttSpan.previousSibling) {
             //ttSpan does not own the line - it is not the first child
             //move spans not belonging to the tt starting line        
             const startLine = this.currentLine!;
             do {
                 const toMoveSpan = ttSpan;
                 const isLast = ttSpan === ttEndSpan;
-                if(!isLast) ttSpan = ttSpan!.nextSibling;
-                startLine.insertBefore(toMoveSpan!, nextSpanOnStartLine);                
-                if(isLast) return; //all tt spans where on the same line (and they did not own the line)
-            } while(ttSpan);
-            ttLine = ttLine!.nextSibling;            
+                if (!isLast) ttSpan = ttSpan!.nextSibling;
+                startLine.insertBefore(toMoveSpan!, nextSpanOnStartLine);
+                if (isLast) return; //all tt spans where on the same line (and they did not own the line)
+            } while (ttSpan);
+            ttLine = ttLine!.nextSibling;
         }
 
         this.moveLines(ttLine, ttEndSpan, nextSpanOnStartLine);
@@ -178,21 +179,21 @@ export class DomRenderingProjection extends Reaction {
             const spanToMove = span;
             span = span.nextSibling;
             ttEndLine!.insertBefore(spanToMove, spanBefore);
-        }        
+        }
     }
 
     adjustIndent(firstSpan: ChildNode, indent: number) {
         //INVARIANT: firstSpan is the span of a first token on the line
         let indDom = firstSpan.previousSibling as HTMLSpanElement | null;
-        if(indent) {
-            if(!indDom) { 
+        if (indent) {
+            if (!indDom) {
                 indDom = document.createElement("span");
                 indDom.className = indentClassName;
                 firstSpan.before(indDom);
             }
             indDom.textContent = this.getSpanText(indent);
-        } else 
-            if(indDom) indDom.remove();
+        } else
+            if (indDom) indDom.remove();
     }
 
     renderHeap(heap: Heap) {
@@ -203,7 +204,7 @@ export class DomRenderingProjection extends Reaction {
         ctx.renderNode(heap.root, undefined);
 
         this.rootTT = ctx.children[0];
-        
+
         return this.dom;
     }
 
@@ -234,68 +235,68 @@ export const indentClassName = "ind";
 
 export function nextSpan(span: ChildNode) {
     const next = span.nextSibling;
-    if(next) return next;
+    if (next) return next;
     return span.parentElement?.nextSibling?.firstChild;
 }
 
 export function removeRange(beforeSpan: ChildNode, endSpan: ChildNode) {
     //TODO: consider Range.deleteContents() API
-    if(beforeSpan === endSpan) return;
+    if (beforeSpan === endSpan) return;
     let span = nextSpan(beforeSpan);
     let line: ChildNode | null = span!.parentElement!;
-    
+
     //checking of previousSibling should be enough, because if it is get by nextSpan()
     //it is the same as !isFirstToken(ttSpan) here        
-    if(span!.previousSibling) {
+    if (span!.previousSibling) {
         //span does not owns line
         //line can be the 1st line
         //remove head from the start line
         do {
             const toDelSpan = span!;
             const isLast = span === endSpan;
-            if(!isLast) span = span!.nextSibling;
+            if (!isLast) span = span!.nextSibling;
             line.removeChild(toDelSpan);
-            if(isLast) return; //all spans where on the same line (and they did not own the line)
-        } while(span);                
+            if (isLast) return; //all spans where on the same line (and they did not own the line)
+        } while (span);
     } else {
         //span owns the line, it cannot be the 1st line
         line = line.previousSibling!
     }
 
-    removeLines(line, endSpan);    
+    removeLines(line, endSpan);
 }
 
 export function removeLines(beforeLine: ChildNode, endSpan: ChildNode) {
     //beforeLine must be a line before all lines to be removed
     //move tail of endLine to (start) line
-    for(let span = endSpan.nextSibling; span; ) {
+    for (let span = endSpan.nextSibling; span;) {
         const spanToMove = span;
         span = span.nextSibling;
         beforeLine.appendChild(spanToMove);
     }
-    
+
     //remove all lines after line till endLine (included)
     let endLine = endSpan.parentElement!;
     let line = beforeLine.nextSibling; //beforeLine does not belong to lines to be removed
-    for(;;) {
-        if(!line) throw new Error("Did not find endLine");
+    for (; ;) {
+        if (!line) throw new Error("Did not find endLine");
         const lineToRemove = line;
         const isLast = line === endLine;
-        if(!isLast) line = line.nextSibling;
+        if (!isLast) line = line.nextSibling;
         lineToRemove.remove();
-        if(isLast) return;
+        if (isLast) return;
     }
 }
 
 export function removeLine(firstTokenSpan: ChildNode) {
     //INVARIANT: firstTokenSpan is not on the first line (which cannot be removed)
     const line = firstTokenSpan.parentElement!;
-    const beforeLine = line.previousSibling!;    
+    const beforeLine = line.previousSibling!;
     //move all spans of the line
-    for(let span: ChildNode | null = firstTokenSpan; span; ) {
+    for (let span: ChildNode | null = firstTokenSpan; span;) {
         const spanToMove = span;
         span = span.nextSibling;
         beforeLine.appendChild(spanToMove);
     }
-    line.remove();    
+    line.remove();
 }

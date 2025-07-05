@@ -1,10 +1,13 @@
-import { INodeRef, IReadNode } from "../node";
+import type { INodeRef, IReadNode } from "../node";
 import { StyleDef, StyleTermArg } from "../core/grammarLang";
 import { TokenAddIndentDef, TokenConst, TokenConstDef, TokenDropSpaceDef, TokenProperty, TokenPropertyDef, TokenStartNewLineDef, TokenStructured, TokenStructuredDef, TokenSubIndentDef, TokenTree, TokenTreeDef } from "./tokenTreeLang";
 
 
 export class DomRenderer {
-    constructor(readonly rootTT: INodeRef) {
+    readonly rootTT: INodeRef;
+
+    constructor(rootTT: INodeRef) {
+        this.rootTT = rootTT;
     }
     lines: HTMLDivElement = null!;
     currentLine: HTMLDivElement = null!;

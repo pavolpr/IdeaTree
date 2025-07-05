@@ -1,9 +1,9 @@
-import { NodeType, IType, TypeKind, typeEquals, getNodeType } from "./type";
-import { Atom, AtomValue, isAtomValue, IAtomValue, IAtom } from './mx/atom';
-import { globalState, IChangeMap, ensureCanMutate, IHeapContext } from './mx/globalstate';
+import { type NodeType, type IType, TypeKind, typeEquals, getNodeType } from "./type";
+import { Atom, AtomValue, isAtomValue, type IAtomValue, type IAtom } from './mx/atom';
+import { globalState, type IChangeMap, ensureCanMutate, type IHeapContext } from './mx/globalstate';
 import { startBatch, endBatch } from "./mx/source";
 import * as utils from "./utils";
-import { Uid } from "./utils";
+import { type Uid } from "./utils";
 
 
 export interface INodeRef {

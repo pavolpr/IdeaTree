@@ -9,7 +9,7 @@
 //   https://github.com/traitsjs/traits.js
 //   https://github.com/michaelolof/typescript-mix/blob/master/src/index.ts
 
-import { INodeRef } from "./node";
+import type { INodeRef } from "./node";
 
 //export type Class<Inst, Stat> = (new (...args: any[]) => Inst) & Stat;
 //export type Class<Inst, Stat> = { new(...args: any[]): Inst } & { [K in keyof Stat]: Stat[K] };
@@ -26,14 +26,18 @@ export type MixinFactory<CSub extends CSuper, CSuper extends Ctor> = (superclass
 export class Mixin<CM extends CB, CB extends Ctor = ObjectConstructor> {
     name: string = "<unapplied>"
     readonly appliedTo: Map<CB /*superclass*/, Ctor/*subclass*/> = new Map();
-    
-    //constructor(public factory: MixinFactory<IM, SM, IB, SB>) {}
-    constructor(readonly def: INodeRef, public factory: MixinFactory<CM, CB>) {}
-    
+    readonly def: INodeRef;
+    public factory: MixinFactory<CM, CB>;
+
+    constructor(def: INodeRef, factory: MixinFactory<CM, CB>) {
+        this.def = def;
+        this.factory = factory;
+    }
+
     makeSubclass(superclass: CB) {
-        if(this.isIn(superclass.prototype))
+        if (this.isIn(superclass.prototype))
             return superclass;
-               
+
         const appliedTo = this.appliedTo;
         let subclass = appliedTo.get(superclass);
         if (!subclass) {
@@ -43,11 +47,11 @@ export class Mixin<CM extends CB, CB extends Ctor = ObjectConstructor> {
             let current = upper ? new Set(upper) : new Set<Mixin<any, any>>();
             current.add(this);
             subclass.prototype[_appliedMixins] = current;
-            
+
             appliedTo.set(superclass, subclass);
         }
 
-        return subclass;            
+        return subclass;
     }
 
     isIn(o: any) {
@@ -65,17 +69,17 @@ export function mix<B extends B1, M1 extends B1, B1 extends Ctor>(superclass: B,
 //export function mix<B extends B1, M1 extends B1, B1>(superclass: Constructor<B>, m1: Mixin<M1, B1>): Constructor<B & M1>;
 //export function mix<IB extends IB1, SB extends SB1, IM1 extends IB1, SM1 extends SB1, IB1, SB1>(superclass: Class<IB, SB>, m1: Mixin<IM1, SM1, IB1, SB1>): Class<IB & IM1, SB & SM1>;
 //export function mix<B extends B1 & B2, M1 extends B1, B1, M2 extends B2, B2>(superclass: Constructor<B>, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>): Constructor<B & M1 & M2>;
-export function mix<B extends B1 & B2, M1 extends B1, B1 extends Ctor, M2 extends B2, B2 extends Ctor>(superclass: B, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>): 
-        Ctor<InstanceType<B> & InstanceType<M1> & InstanceType<M2>> & Props<B> & Props<M1> & Props<M2>;
+export function mix<B extends B1 & B2, M1 extends B1, B1 extends Ctor, M2 extends B2, B2 extends Ctor>(superclass: B, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>):
+    Ctor<InstanceType<B> & InstanceType<M1> & InstanceType<M2>> & Props<B> & Props<M1> & Props<M2>;
 export function mix<B extends B1 & B2 & B3, M1 extends B1, B1 extends Ctor, M2 extends B2, B2 extends Ctor, M3 extends B3, B3 extends Ctor>
-        (superclass: B, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>, m3: Mixin<M3, B3>): 
-        Ctor<InstanceType<B> & InstanceType<M1> & InstanceType<M2> & InstanceType<M3>> & Props<B> & Props<M1> & Props<M2> & Props<M3>;
+    (superclass: B, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>, m3: Mixin<M3, B3>):
+    Ctor<InstanceType<B> & InstanceType<M1> & InstanceType<M2> & InstanceType<M3>> & Props<B> & Props<M1> & Props<M2> & Props<M3>;
 export function mix<B extends B1 & B2 & B3 & B4, M1 extends B1, B1 extends Ctor, M2 extends B2, B2 extends Ctor, M3 extends B3, B3 extends Ctor, M4 extends B4, B4 extends Ctor>
-        (superclass: B, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>, m3: Mixin<M3, B3>, m4: Mixin<M4, B4>): 
-        Ctor<InstanceType<B> & InstanceType<M1> & InstanceType<M2> & InstanceType<M3> & InstanceType<M4>> & Props<B> & Props<M1> & Props<M2> & Props<M3> & Props<M4>;
+    (superclass: B, m1: Mixin<M1, B1>, m2: Mixin<M2, B2>, m3: Mixin<M3, B3>, m4: Mixin<M4, B4>):
+    Ctor<InstanceType<B> & InstanceType<M1> & InstanceType<M2> & InstanceType<M3> & InstanceType<M4>> & Props<B> & Props<M1> & Props<M2> & Props<M3> & Props<M4>;
 export function mix(superclass: Ctor, ...mixins: Mixin<any, any>[]) {
     let c = superclass;
-    for(let m of mixins) c = m.makeSubclass(c);
+    for (let m of mixins) c = m.makeSubclass(c);
     //return mixins.reduce((c, m) => m.makeSubclass(c), superclass);
     return c;
 }

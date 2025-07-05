@@ -12,7 +12,7 @@ export interface IAtom extends ISource {
  */
 export class Atom implements IAtom {
     protected _state: TrackingState = TrackingState.NotTracking; //0
-    
+
     get lowestDerivationState(): TrackingState { return this._state & TrackingStateMasks.stateMask; }
     set lowestDerivationState(value: TrackingState) { this._state = (value & TrackingStateMasks.stateMask) | (this._state & ~TrackingStateMasks.stateMask); }
     //lowestDerivationState = TrackingState.NotTracking;
@@ -20,13 +20,13 @@ export class Atom implements IAtom {
     get isPendingUntracked(): boolean { return true; }
     set isPendingUntracked(_value: boolean) { }
     //isPendingUntracked = true; // for effective unobserving. BaseAtom has true, for extra optimization, so its onBecomeUnobserved never gets called, because it's not needed
-    
+
     get diffValue(): boolean { return (this._state & TrackingStateMasks.diffValueBit) !== 0; }
     set diffValue(value: boolean) { this._state = value ? (this._state | TrackingStateMasks.diffValueBit) : (this._state & ~TrackingStateMasks.diffValueBit); }
     //diffValue = false;
-    
+
     derivations: utils.ArraySet<IDerivation> = [];
-    
+
     lastAccessedBy = 0;
 
     //isComputedValue: boolean; //Atom.prototype.isComputedValue = false;
@@ -36,7 +36,7 @@ export class Atom implements IAtom {
      * Create a new atom. For debugging purposes it is recommended to give it a name.
      * The onBecomeObserved and onBecomeUnobserved callbacks can be used for resource management.
      */
-    constructor(/*public name = "Atom@" + getNextId()*/) {}
+    constructor(/*public name = "Atom@" + getNextId()*/) { }
 
     onBecomeUtracked() {
         // noop ... should be never called, because it has IsPendingUntracked set to true forever
@@ -60,7 +60,7 @@ export class Atom implements IAtom {
                 this.lastAccessedBy = globalState.derivationRunId;
                 derivation.sources[derivation.unboundSrcsCount++] = this;
             }
-        } 
+        }
         // else if (source.derivations.length === 0) {
         //     queueForBecomeUntracked(source);
         // }
@@ -70,7 +70,7 @@ export class Atom implements IAtom {
      * Invoke this method _after_ this method has changed to signal mobx that all its observers should invalidate.
      */
     public reportChanged() {
-        if(this.derivations.length > 0) {
+        if (this.derivations.length > 0) {
             startBatch();
             propagateChanged(this);
             endBatch();
@@ -78,10 +78,10 @@ export class Atom implements IAtom {
     }
 
     checkCanMutate() {
-        if(this.derivations.length === 0)
+        if (this.derivations.length === 0)
             return;
         // Should never be possible to change an observed observable from inside computed, see #798
-        if (globalState.computationDepth > 0) 
+        if (globalState.computationDepth > 0)
             throwError("Computed values are not allowed to cause side effects. Tried to modify: " + this);
         // Should not be possible to change observed state outside strict mode, except during initialization, see #563
         if (!globalState.allowStateChanges)
@@ -92,7 +92,7 @@ export class Atom implements IAtom {
         this.checkCanMutate();
         const derivations = this.derivations;
         const step = derivationSet.step(derivations);
-        for(let i = step - 1, len = derivations.length; i < len; i += step) {
+        for (let i = step - 1, len = derivations.length; i < len; i += step) {
             const der = derivations[i];
             if (!replaceSource(der, this, newAtomValue))
                 throw new Error("Some new atom value was not replaced in the old derivations' sources.");
@@ -123,9 +123,9 @@ export interface IAtomValue<T> extends IAtom {
     checkCanMutate(): void;
 }
 
-export class AtomValue<T> extends Atom  implements IAtomValue<T> {
+export class AtomValue<T> extends Atom implements IAtomValue<T> {
     protected value: T;
-    
+
     constructor(value: T) {
         super();
         this.value = value;
@@ -141,7 +141,7 @@ export class AtomValue<T> extends Atom  implements IAtomValue<T> {
 
     set(newValue: T): boolean {
         this.checkCanMutate();
-        
+
         if (this.value !== newValue) {
             this.value = newValue;
             this.reportChanged();
@@ -159,7 +159,7 @@ export class AtomValue<T> extends Atom  implements IAtomValue<T> {
         this.reportChanged();
         return true;
     }
-    
+
     toJSON() {
         return this.get();
     }
@@ -181,7 +181,7 @@ export function isAtomValue(x: any): x is IAtomValue<any> {
 // ) => x is IAtomValue<any>;
 
 import { globalState, throwError } from "./globalstate";
-import { ISource, propagateChanged, startBatch, endBatch, derivationSet } from "./source";
-import { IDerivation, TrackingState, TrackingStateMasks, replaceSource } from "./derivation";
+import { type ISource, propagateChanged, startBatch, endBatch, derivationSet } from "./source";
+import { type IDerivation, TrackingState, TrackingStateMasks, replaceSource } from "./derivation";
 import * as utils from "../utils";
 

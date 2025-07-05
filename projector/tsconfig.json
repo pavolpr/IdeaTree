@@ -1,27 +1,11 @@
 {
-    "include": [
-        //"src/mx/*.ts",
-        "src/**/*.ts",
-        "src/**/*.tsx"
-        //"node_modules/@types/jasmine/index.d.ts"     
-    ],
-    // "files": [
-    //     //"src/main.ts",
-    //     //"src/type.ts",
-    //     //"src/greet.ts"
-    //     //"node_modules/@types/jasmine/index.d.ts"
-    // ],
-    "compilerOptions": {
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "noUnusedParameters": true,
-        "noUnusedLocals": true,
-        "strictNullChecks": true,
-        "strict": true,
-        "experimentalDecorators": true,
-        "target": "ES2018",
-        "jsx": "react",
-        "jsxFactory": "h",
-        "moduleResolution": "Node"
-    }
+    "files": [],
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        },
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ]
 }
