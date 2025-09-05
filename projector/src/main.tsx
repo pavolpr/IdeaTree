@@ -1,5 +1,5 @@
 //import { h, render, Component, JSX } from "preact";
-import { render } from 'solid-js/web'
+import { For, render } from 'solid-js/web'
 //import { Node, ensureGlobalNode, type INodeRef, type IReadNode, type IReadNodeInternal } from "./node";
 //import * as utils from "./utils";
 //import { createHeap1, createHeap2 } from "./testNodes";
@@ -17,13 +17,14 @@ import { addStyleToHead } from "./mx/styles";
 import { structureLangHeap } from "./core/structureLang";
 import { grammarLangHeap } from "./core/grammarLang";
 import { tokenLangHeap } from "./core/tokenLang";
-import "./core/postDefiitions";
+import "./core/postDefinitions";
 //import { StringRenderContext } from "./editor/renderText";
 import { tokenTreeLangHeap } from "./editor/tokenTreeLang";
 import { ProjectionMap } from "./editor/renderUtils";
 import { DomRenderingProjection } from "./editor/DomRenderingProjection";
 import { grammarTriviaLangHeap } from "./core/grammarTriviaLang";
 import { addTops, changeTopElementName, removeFirstTops, removeSecondTops, TestSrcHeap } from "./core/testSrc";
+import { getAllTokens } from './parser/buildParser';
 
 // function showHello(divName: string, name: string) {
 //     const elt = document.getElementById(divName);
@@ -470,6 +471,9 @@ projectionMap.addToProjectionMap(grammarTriviaLangHeap);
 // const grammarString = ctx.renderHeap(grammarLangHeap);
 // const tokenTreeString = ctx.renderHeap(tokenTreeLangHeap);
 
+const { tokenDefNames, constantTokens } = getAllTokens();
+
+
 //ChangeSubType()
 const dctxE = new DomRenderingProjection(projectionMap);
 const domE = dctxE.renderHeap(TestSrcHeap);
@@ -497,6 +501,17 @@ function App() {
     //<button onClick={() => TextStyle.FontSizeFA.set(heap2.style2, 20)}>change style</button>
     return (
         <div>
+            <h3>Tokens</h3>
+            <pre style={{ "white-space": "pre-wrap", "word-break": "break-word" }}>
+                <For each={tokenDefNames}>
+                    {(token, i) => i() > 0 ? " '" + token + "'" : "'" + token + "'"}
+                </For>
+            </pre>
+            <pre style={{ "white-space": "pre-wrap", "word-break": "break-word" }}>
+                <For each={constantTokens}>
+                    {(token, i) => i() > 0 ? " '" + token + "'" : "'" + token + "'"}
+                </For>
+            </pre>
             <h3>Test Src  DOM</h3>
             <button onClick={() => addTops()}>Change SubType</button>
             <button onClick={() => removeFirstTops()}>Remove SubType first child</button>

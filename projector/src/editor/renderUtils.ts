@@ -54,7 +54,7 @@ export function forAllNodes(node: IReadNode, run: (node: IReadNode) => void, exc
     const fields = node.type.fields;
     for (let i = 0; i < fields.length; i++) {
         const field = fields[i];
-        if (field.type.kind == TypeKind.ChildNode) {
+        if (field?.type.kind == TypeKind.ChildNode) {
             let child = (node.getFieldAt(i) as INodeRef | undefined)?.read;
             for (; child != undefined; child = child.next?.read) {
                 forAllNodes(child, run, false);

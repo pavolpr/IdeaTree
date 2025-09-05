@@ -155,7 +155,7 @@ token CharValue
 */
 import { LangBuilder, BaseConcept, tokenLangGuid, TokenDefDef, StyleTermArgDef } from "../concept";
 import { tINamedDef, tILangDefinitionDef } from "./structureLang";
-import { Mixin } from "../mixins";
+import { mix, Mixin } from "../mixins";
 import { getSidx } from "../utils";
 
 //a little hack, as styleTermArgDefNodeRef is the only one node circling between grammar and token langs
@@ -166,7 +166,7 @@ const lb = new LangBuilder(tokenLangGuid, "Token", 60);
 lb.newConceptDefNode(getSidx(TokenDefDef.uid), "TokenDef");
 export const TokenTermDef = lb.newConceptDefNode(2, "TokenTerm");
 export const ConstantStringTokenTermDef = lb.newConceptDefNode(3, "ConstantStringTokenTerm");
-export const tISingleCharTokenTermDef = lb.newConceptDefNode(4, "ISingleCharTokenTerm");
+export const tISingleCharTokenTermDef = lb.newTraitDefNode(4, "ISingleCharTokenTerm");
 export const ConstantCharTokenTermDef = lb.newConceptDefNode(5, "ConstantCharTokenTerm");
 export const CharRangeTokenTermDef = lb.newConceptDefNode(6, "CharRangeTokenTerm");
 export const NotTokenTermDef = lb.newConceptDefNode(7, "NotTokenTerm");
@@ -230,11 +230,11 @@ lb.subTypeAsMember(TokenTermDef, tISingleCharTokenTermDef);
 //             '\''(style:Quote, match-brace-left) drop-space
 //             value(style: String)
 //             drop-space '\''(style:Quote, match-brace-right)
-export class ConstantCharTokenTerm extends TokenTerm {
+export class ConstantCharTokenTerm extends mix(TokenTerm, tISingleCharTokenTerm.M) {
     static Def = new ConstantCharTokenTerm(ConstantCharTokenTermDef);
     static ValueFA = lb.stringFieldAccessor(ConstantCharTokenTermDef, 29, "value"); //TODO token CharValue
 }
-lb.subTypeAsMember(TokenTermDef, ConstantCharTokenTermDef);
+lb.subTypeAsMember(tISingleCharTokenTermDef, ConstantCharTokenTermDef);
 
 //     concept CharRangeTokenTerm with ISingleCharTokenTerm
 //         from: child ConstantCharTokenTerm
@@ -247,12 +247,12 @@ lb.subTypeAsMember(TokenTermDef, ConstantCharTokenTermDef);
 //         //    '\''(style:Quote, match-brace-left) drop-space from(style: String) drop-space '\''(style:Quote, match-brace-right)
 //         //    drop-space ".." drop-space
 //         //    '\''(style:Quote, match-brace-left) drop-space to(style: String) drop-space '\''(style:Quote, match-brace-right)
-export class CharRangeTokenTerm extends TokenTerm {
+export class CharRangeTokenTerm extends mix(TokenTerm, tISingleCharTokenTerm.M) {
     static Def = new CharRangeTokenTerm(CharRangeTokenTermDef);
     static FromCA = lb.childAccessor(CharRangeTokenTermDef, ConstantCharTokenTermDef, 30, "from");
     static ToCA = lb.childAccessor(CharRangeTokenTermDef, ConstantCharTokenTermDef, 31, "to");
 }
-lb.subTypeAsMember(TokenTermDef, CharRangeTokenTermDef);
+lb.subTypeAsMember(tISingleCharTokenTermDef, CharRangeTokenTermDef);
 
 //     concept NotTokenTerm
 //         chars: children ISingleCharTokenTerm+

@@ -638,14 +638,14 @@ addProjection(ParenthesizedTermDef, undefined, [
 //     projection
 //         "drop-space"(style: TermKeyword)
 addProjection(DropSpaceTermDef, undefined, [
-    styledToken("drop-space", TermKeywordStyle)
+    styledToken("drop_space", TermKeywordStyle)
 ]);
 
 // concept StartNewLineTerm
 //     projection
 //         "start-new-line"(style: TermKeyword)
 addProjection(StartNewLineTermDef, undefined, [
-    styledToken("start-new-line", TermKeywordStyle)
+    styledToken("start_new_line", TermKeywordStyle)
 ]);
 
 // concept IndentedBlockTerm
@@ -655,7 +655,7 @@ addProjection(StartNewLineTermDef, undefined, [
 //         indented-block
 //             terms+ //(priority >= lowest, separator: " ")
 addProjection(IndentedBlockTermDef, undefined, [
-    startNewLine(), styledToken("indented-block", TermKeywordStyle),
+    startNewLine(), styledToken("indented_block", TermKeywordStyle),
     indentedBlock([
         oneOrMore(member(IndentedBlockTerm.TermsCNA))
     ])
@@ -760,14 +760,14 @@ addProjection(SeparatorTermArgDef, undefined, [
 //     projection
 //         "match-brace-left"(style: Keyword)
 addProjection(MatchBraceLeftTermArgDef, undefined, [
-    styledToken("match-brace-left", KeywordStyle)
+    styledToken("match_brace_left", KeywordStyle)
 ]);
 
 // concept MatchBraceRightTermArg
 //     projection
 //         "match-brace-right"(style: Keyword)
 addProjection(MatchBraceRightTermArgDef, undefined, [
-    styledToken("match-brace-right", KeywordStyle)
+    styledToken("match_brace_right", KeywordStyle)
 ]);
 
 // concept PriorityTermArg
@@ -806,7 +806,7 @@ addProjection(StyleDefDef, undefined, [
 //     projection
 //         "font-weight"(style: Keyword) drop-space ":"(style: Operator) weight
 addProjection(FontWeightStyleAttrDef, undefined, [
-    styledToken("font-weight", KeywordStyle), dropSpace(),
+    styledToken("font_weight", KeywordStyle), dropSpace(),
     styledToken(":", OperatorStyle),
     member(FontWeightStyleAttr.WeightCA)
 ]);
@@ -815,7 +815,7 @@ addProjection(FontWeightStyleAttrDef, undefined, [
 //     projection
 //         "font-style"(style: Keyword) drop-space ":"(style: Operator) style
 addProjection(FontStyleStyleAttrDef, undefined, [
-    styledToken("font-style", KeywordStyle), dropSpace(),
+    styledToken("font_style", KeywordStyle), dropSpace(),
     styledToken(":", OperatorStyle),
     member(FontStyleStyleAttr.StyleCA)
 ]);
