@@ -19,7 +19,7 @@ export interface INodeRef {
 export interface INodeRefInternal extends INodeRef {
     readonly _me: Uid | INodeRefInternal; //Uid when primary Node, the primary node otherwise
     //readonly _type?: NodeType;
-    readonly _nextVer?: IWriteNodeInternal; // MVCC for other changeMap-s
+    readonly _nextVer: IWriteNodeInternal | undefined; // MVCC for other changeMap-s
     
     findVersion(editableHeapContext: IHeapContext): IWriteNodeInternal | undefined;
     readNode(changeMap?: IChangeMap, canUnresolve?: boolean): IReadNodeInternal | undefined;
@@ -31,10 +31,10 @@ export interface IReadNode {
     readonly uid: number;
     readonly type: NodeType;
     readonly def: INodeRef;
-    readonly parent?: INodeRef;
-    readonly role?: INodeRef;
-    readonly prev?: INodeRef;
-    readonly next?: INodeRef;
+    readonly parent: INodeRef | undefined;
+    readonly role: INodeRef | undefined;
+    readonly prev: INodeRef | undefined;
+    readonly next: INodeRef | undefined;
     
     getField(field: INodeRef, isChild?: boolean): FieldValue | undefined;
     getFieldAt(index: number): FieldValue;
@@ -44,19 +44,19 @@ export interface IReadNode {
 export interface IReadNodeInternal extends IReadNode, IAtom {
     readonly _me: Uid | INodeRefInternal; //Uid when primary Node, the primary node otherwise
     
-    readonly _heapContext?: IHeapContext;
-    readonly _nextVer?: IWriteNodeInternal; // MVCC for other changeMap-s
+    readonly _heapContext: IHeapContext | undefined;
+    readonly _nextVer: IWriteNodeInternal | undefined; // MVCC for other changeMap-s
 
-    readonly _type?: NodeType;
+    readonly _type: NodeType | undefined;
     
     readonly _parent: ParentNodeInternal;
-    readonly _role?: INodeRefInternal;
+    readonly _role: INodeRefInternal | undefined;
 
-    readonly _prev?: INodeRefInternal; // TODO: may be in _content, to save space in leafs
-    readonly _next?: INodeRefInternal; // TODO: may be in _content, to save space in leafs
+    readonly _prev: INodeRefInternal | undefined; // TODO: may be in _content, to save space in leafs
+    readonly _next: INodeRefInternal | undefined; // TODO: may be in _content, to save space in leafs
 
     //maybe undefined when no fields, otherwise all slots must have a value (!==undefined)
-    readonly _content?: ContentValue[];
+    readonly _content: ContentValue[] | undefined;
 }
 
 export interface IWriteNode extends IReadNode {
@@ -79,19 +79,19 @@ export interface IWriteNode extends IReadNode {
 export interface IWriteNodeInternal extends IWriteNode, IAtom {
     _me: Uid | INodeRefInternal; //Uid when primary Node, the primary node otherwise
     
-    _heapContext?: IHeapContext;
-    _nextVer?: IWriteNodeInternal; // MVCC for other changeMap-s
+    _heapContext: IHeapContext | undefined;
+    _nextVer: IWriteNodeInternal | undefined; // MVCC for other changeMap-s
 
-    _type?: NodeType;
+    _type: NodeType | undefined;
     
     _parent: ParentNodeInternal;
-    _role?: INodeRefInternal;
+    _role: INodeRefInternal | undefined;
 
-    _prev?: INodeRefInternal; // TODO: may be in _content, to save space in leafs
-    _next?: INodeRefInternal; // TODO: may be in _content, to save space in leafs
+    _prev: INodeRefInternal | undefined; // TODO: may be in _content, to save space in leafs
+    _next: INodeRefInternal | undefined; // TODO: may be in _content, to save space in leafs
 
     //maybe undefined when no fields, otherwise all slots must have a value (!==undefined)
-    _content?: ContentValue[];
+    _content: ContentValue[] | undefined;
 
     ensureEditableHeapContext(): IHeapContext;
     setChild(field: INodeRefInternal, child: INodeRefInternal, fieldType: IType): IWriteNodeInternal;
@@ -142,7 +142,7 @@ export interface INodeKey {
     heapContext: IHeapContext;
     nextVer: IWriteNodeInternal | undefined;
     nodeType: NodeType;
-    content?: ContentValue[];
+    content: ContentValue[] | undefined;
     parent: ParentNodeInternal | undefined;
     newNode(): Node; 
 }
@@ -369,21 +369,21 @@ export class Node extends Atom implements INodeRefInternal, IReadNodeInternal, I
     // }
 
     //TODO: can be merged with _type to { _type, _heap, changeMap } as _context
-    /*internal*/_heapContext?: IHeapContext;
+    /*internal*/_heapContext: IHeapContext | undefined;
     ///*internal*/nextHeader?: INodeRecordHeader; // MVCC for other changeMap-s
-    /*internal*/_nextVer?: Node; // MVCC for other changeMap-s
+    /*internal*/_nextVer: Node | undefined; // MVCC for other changeMap-s
 
-    /*internal*/_type?: NodeType;
+    /*internal*/_type: NodeType | undefined;
     //memUnit: INodeRef; //from nodeType
     
     /*internal*/_parent: ParentNodeInternal;
-    /*internal*/_role?: INodeRefInternal; //this could be part of _type or _context
+    /*internal*/_role: INodeRefInternal | undefined; //this could be part of _type or _context
 
-    /*internal*/_prev?: INodeRefInternal; // TODO: may be in _content, to save space in leafs
-    /*internal*/_next?: INodeRefInternal; // TODO: may be in _content, to save space in leafs
+    /*internal*/_prev: INodeRefInternal | undefined; // TODO: may be in _content, to save space in leafs
+    /*internal*/_next: INodeRefInternal | undefined; // TODO: may be in _content, to save space in leafs
 
     //maybe undefined when no fields, otherwise all slots must have a value (!==undefined)
-    /*internal*/_content?: ContentValue[];
+    /*internal*/_content: ContentValue[] | undefined;
     
     get me() { const me = this._me; return typeof me === "number" ? this as INodeRefInternal : me; }
     get uid() { const me = this._me; return typeof me === "number" ? me : me._me as number; }
@@ -656,7 +656,7 @@ export class Node extends Atom implements INodeRefInternal, IReadNodeInternal, I
             throw new Error(`Trying to getField() on an unresolved node:${this}`);
         const i = type.getFieldIndex(field.uid);
         // tslint:disable-next-line:no-conditional-assignment
-        if (i >= 0 && (!!isChild === (type.fields[i].type.kind === TypeKind.ChildNode))) {
+        if (i >= 0 && (!!isChild === (type.fields[i]!.type.kind === TypeKind.ChildNode))) {
             return this.getFieldAt(i);
             // const content = this._content!;
             // //return this.getFieldImpl(field, i);
@@ -687,7 +687,7 @@ export class Node extends Atom implements INodeRefInternal, IReadNodeInternal, I
         const content = this._content;
         if(content === undefined || index < 0 || index >= content.length)
             throw new Error(`Field index out of range. index:${index}, content length:${content && content.length || 0}`);
-        const value = content[index];
+        const value = content[index]!;
         if (isAtomValue(value)) {
             return value.get(); //fast happy path
         }
@@ -1000,9 +1000,9 @@ export class Node extends Atom implements INodeRefInternal, IReadNodeInternal, I
         const nodeType = this._type!;
         let i = nodeType.getFieldIndex(field.uid);
         if (i >= 0) {
-            const oldValue: ContentValue = this._content![i];
+            const oldValue: ContentValue = this._content![i]!;
             let typeChanged = false;
-            if (!typeEquals(nodeType.fields[i].type, fieldType)) {
+            if (!typeEquals(nodeType.fields[i]!.type, fieldType)) {
                 this._type = nodeType.updateField(fieldType, i);
                 typeChanged = true; //at least the type was changed
                 this.reportChanged(); // change of the _type (invalidates type and possinbly change to being a child, see getField() when childOnly === true)
@@ -1096,11 +1096,11 @@ export class Node extends Atom implements INodeRefInternal, IReadNodeInternal, I
         const type = this._type!;
         const i = type.getFieldIndex(field.uid);
         if (i >= 0) {
-            if(mustNotBeChild && type.fields[i].type.kind === TypeKind.ChildNode) {
+            if(mustNotBeChild && type.fields[i]!.type.kind === TypeKind.ChildNode) {
                 throw new Error(`A child cannot be removed by removeField().`);
             }
             this._type = type.removeField(i);
-            let value = this._content![i];
+            let value = this._content![i]!;
             this._content!.splice(i, 1); // TODO: ? use an optimized "remove element"
             if (isAtomValue(value)) {
                 const atom = value;
@@ -1121,7 +1121,7 @@ export class Node extends Atom implements INodeRefInternal, IReadNodeInternal, I
         const type = this._type!;
         const i = type.getFieldIndex(field.uid);
         if (i >= 0) {
-            if(type.fields[i].type.kind !== TypeKind.ChildNode) {
+            if(type.fields[i]!.type.kind !== TypeKind.ChildNode) {
                 throw new Error(`A non-child cannot be removed by removeChildren().`);
             }
             let firstChild = this._content![i] as INodeRefInternal | IAtomValue<INodeRefInternal>;

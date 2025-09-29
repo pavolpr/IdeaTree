@@ -137,7 +137,7 @@ export function endBatch() {
         const sources = globalState.pendingUnobservations;
         // tslint:disable-next-line:prefer-for-of
         for (let i = 0; i < sources.length; i++) {
-            const source = sources[i];
+            const source = sources[i]!;
             source.isPendingUntracked = false;
             if (source.derivations.length === 0) {
                 source.onBecomeUtracked();
@@ -199,7 +199,7 @@ export function propagateChanged(source: ISource) {
     //TODO: think if we shoud iterate rather normally
     //for(let i = derivations.length - step; i >= 0; i -= step) {
     for (let i = step - 1, len = derivations.length; i < len; i += step) {
-        const d = derivations[i];
+        const d = derivations[i]!;
         if (d.sourcesState === TrackingState.UpToDate) d.onBecomeStale();
         d.sourcesState = TrackingState.Stale;
     }
@@ -217,7 +217,7 @@ export function propagateChangeConfirmed(source: ISource) {
     //TODO: think if we shoud iterate rather normally
     //for(let i = derivations.length - step; i >= 0; i -= step) {
     for (let i = step - 1, len = derivations.length; i < len; i += step) {
-        const d = derivations[i];
+        const d = derivations[i]!;
         if (d.sourcesState === TrackingState.PossiblyStale)
             d.sourcesState = TrackingState.Stale;
         else if (
@@ -239,7 +239,7 @@ export function propagateMaybeChanged(source: ISource) {
     //TODO: think if we shoud iterate rather normally
     //for(let i = derivations.length - step; i >= 0; i -= step) {
     for (let i = step - 1, len = derivations.length; i < len; i += step) {
-        const d = derivations[i];
+        const d = derivations[i]!;
         if (d.sourcesState === TrackingState.UpToDate) {
             d.sourcesState = TrackingState.PossiblyStale;
             d.onBecomeStale();

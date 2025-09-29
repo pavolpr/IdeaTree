@@ -277,9 +277,9 @@ export type ArraySet<T> = T[];
 //     return set.length <= lengthThreshold ? 1 : 2;
 // }
 
-export class ArraySetImplementation<Key, T> {
+export class ArraySetImplementation<in Key, T> {
     wasCreated: boolean = false;
-    lastIndex?: number = undefined;
+    lastIndex: number | undefined = undefined;
     readonly equals: (key: Key, value: T) => boolean;
     readonly hash: (key: Key) => number;
     readonly hashValue: (value: T) => number;
@@ -308,7 +308,7 @@ export class ArraySetImplementation<Key, T> {
         const equals = this.equals;
         if (set.length <= lengthThreshold) {
             for (let i = 0; i < set.length; i++) {
-                const entryValue = set[i];
+                const entryValue = set[i]!;
                 if (equals(key, entryValue)) {
                     this.lastIndex = i;
                     return entryValue;
@@ -320,8 +320,8 @@ export class ArraySetImplementation<Key, T> {
 
         const buckets = set[0] as any as Int32Array;
         const hashCode = this.hash(key) & lower31BitMask;
-        for (let i = buckets[hashCode % buckets.length]; i > 0;) {
-            const entryValue = set[i];
+        for (let i = buckets[hashCode % buckets.length]!; i > 0;) {
+            const entryValue = set[i]!;
             if (equals(key, entryValue)) {
                 this.lastIndex = i >> 1;
                 return entryValue;
@@ -341,7 +341,7 @@ export class ArraySetImplementation<Key, T> {
         // pure array
         if (set.length <= lengthThreshold) {
             for (let i = 0; i < set.length; i++) {
-                const entryValue = set[i];
+                const entryValue = set[i]!;
                 if (equals(key, entryValue)) {
                     if (addOnly) throw new Error(`Adding duplicate value:${key}.`);
                     this.wasCreated = false;
@@ -367,8 +367,8 @@ export class ArraySetImplementation<Key, T> {
         const hashCode = this.hash(key) & lower31BitMask;
         let targetBucket = hashCode % buckets.length;
 
-        for (let i = buckets[targetBucket]; i > 0;) {
-            const entryValue = set[i];
+        for (let i = buckets[targetBucket]!; i > 0;) {
+            const entryValue = set[i]!;
             if (equals(key, entryValue)) {
                 if (addOnly) throw new Error(`Adding duplicate value:${key}.`);
                 this.wasCreated = false;
@@ -403,7 +403,7 @@ export class ArraySetImplementation<Key, T> {
 
         // redistribute all entries
         for (let i = 1; i < set.length; i += 2) {
-            const entryValue = set[i];
+            const entryValue = set[i]!;
             const bucket = (this.hashValue(entryValue) & lower31BitMask) % newSize;
             set[i + 1] = buckets[bucket] as any; //next
             buckets[bucket] = i;
@@ -433,7 +433,7 @@ export class ArraySetImplementation<Key, T> {
         const equals = this.equals;
         if (set.length <= lengthThreshold) {
             for (let i = 0; i < set.length; i++) {
-                const entryValue = set[i];
+                const entryValue = set[i]!;
                 if (equals(key, entryValue)) {
                     const lastValue = set.pop() as T;
                     if (i < set.length) {
@@ -449,11 +449,11 @@ export class ArraySetImplementation<Key, T> {
         const hashCode = this.hash(key) & lower31BitMask;
         let bucket = hashCode % buckets.length;
         let last = 0;
-        for (let i = buckets[bucket]; i > 0;) {
-            const entryValue = set[i];
+        for (let i = buckets[bucket]!; i > 0;) {
+            const entryValue = set[i]!;
             if (this.equals(key, entryValue)) {
                 if (last > 0) {
-                    set[last + 1] = set[i + 1]; //.next <- .next
+                    set[last + 1] = set[i + 1]!; //.next <- .next
                 } else {
                     buckets[bucket] = set[i + 1] as any; //.next;
                 }
@@ -463,7 +463,7 @@ export class ArraySetImplementation<Key, T> {
                 if (lastIdx <= lengthThreshold) { //should be actually < ; 7 for threshold 8
                     if (i < lastIdx) set[i] = lastValue as T; // fill the hole with the last value
                     for (i = 1; i < lastIdx; i += 2) {
-                        set[i >> 1] = set[i];
+                        set[i >> 1] = set[i]!;
                     }
                     set.length = lastIdx >> 1; //3 elements when threshold is 8
                 } else if (initialSize <= lastIdx && (lastIdx << 1) < buckets.length) {
@@ -476,7 +476,7 @@ export class ArraySetImplementation<Key, T> {
                     set[i] = lastValue; // fill the hole with the last value
                     set[i + 1] = lastNext as any;
                     bucket = (this.hashValue(lastValue) & lower31BitMask) % buckets.length;
-                    let ii = buckets[bucket];
+                    let ii = buckets[bucket]!;
                     if (ii === lastIdx) {
                         buckets[bucket] = i;
                     } else {

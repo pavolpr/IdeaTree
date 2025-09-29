@@ -1184,16 +1184,16 @@ function paraTT(tt: INodeRef, ...args: INodeRef[]) {
 function seqTT(...tts: INodeRef[]) {
     if (!(tts.length >= 2)) throw Error("at least two tts are needed for seqTT");
     const token = SequenceTokenTerm.new(heap);
-    SequenceTokenTerm.RightCA.setChild(token, tts[tts.length - 1])
-    const left = tts.length == 2 ? tts[0] : seqTT(...tts.slice(0, tts.length - 1));
+    SequenceTokenTerm.RightCA.setChild(token, tts[tts.length - 1]!)
+    const left = tts.length == 2 ? tts[0]! : seqTT(...tts.slice(0, tts.length - 1));
     SequenceTokenTerm.LeftCA.setChild(token, left);
     return token.me;
 }
 function altsTT(...tts: INodeRef[]) {
     if (!(tts.length >= 2)) throw Error("at least two tts are needed for altsTT");
     const token = AlternativeTokenTerm.new(heap);
-    AlternativeTokenTerm.RightCA.setChild(token, tts[tts.length - 1])
-    const left = tts.length == 2 ? tts[0] : altsTT(...tts.slice(0, tts.length - 1));
+    AlternativeTokenTerm.RightCA.setChild(token, tts[tts.length - 1]!)
+    const left = tts.length == 2 ? tts[0]! : altsTT(...tts.slice(0, tts.length - 1));
     AlternativeTokenTerm.LeftCA.setChild(token, left);
     return token.me;
 }

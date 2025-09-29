@@ -39,8 +39,8 @@ export class DomRenderContext implements IRenderContext {
     //oldChildren?: (ITokenElement | undefined)[];
     childIndex = 0;
     tokenPosition = 0;
-    trivia?: INodeRef = undefined;
-    separator?: INodeRef = undefined;
+    trivia: INodeRef | undefined = undefined;
+    separator: INodeRef | undefined = undefined;
 
     //lines: HTMLDivElement = null!;
     //currentLine: HTMLDivElement = null!;
@@ -98,7 +98,7 @@ export class DomRenderContext implements IRenderContext {
     insertTE(te: ITokenElement, lastIndex: number) {
         //make room for tt: move this.childIndex .. lastIndex-1 -> +1
         for (let i = lastIndex; this.childIndex < i; i--) {
-            const te = this.children[i - 1];
+            const te = this.children[i - 1]!;
             this.children[i] = te;
             if (te.isTokenTree())
                 te.index = i;
@@ -221,7 +221,7 @@ export class DomRenderContext implements IRenderContext {
         let st: StructuredTokenTT | undefined = undefined;
         let i = this.childIndex;
         for (; i < this.children.length; i++) {
-            let te = this.children[i];
+            let te = this.children[i]!;
             if (te.isStructuredToken() && te.idRef === idRef) {
                 st = te;
                 break;
@@ -319,7 +319,7 @@ export class DomRenderContext implements IRenderContext {
         let tc: TokenConst | undefined = undefined;
         let i = this.childIndex
         for (; i < this.children.length; i++) {
-            let te = this.children[i];
+            let te = this.children[i]!;
             if (te.isTokenConst() && te.idRef === idRef) {
                 tc = te;
                 break;
@@ -333,7 +333,7 @@ export class DomRenderContext implements IRenderContext {
                 this.childIndex++;
             } else {
                 //needs to move
-                const beforeTE = this.children[i - 1];
+                const beforeTE = this.children[i - 1]!;
                 if (beforeTE.isNewLineTE()) {
                     //tc owns the line
                     //const beforeSpan = tc.endSpan.parentElement!.previousSibling!.lastChild!;

@@ -41,7 +41,7 @@ export class DomRenderingProjection extends Reaction {
     readonly deletedMap = new Map<TokenTree, number/*index from*/>();
     readonly span2TE = new WeakMap<ChildNode, TokenConst>();
 
-    rootTT?: ITokenElement = undefined;
+    rootTT: ITokenElement | undefined = undefined;
     invalidatedTTs: TokenTree[] = [];
 
     dom: HTMLElement;
@@ -60,7 +60,7 @@ export class DomRenderingProjection extends Reaction {
 
             let deletedCount = 0;
             for (let i = 0; i < this.invalidatedTTs.length; i++) {
-                const tt = this.invalidatedTTs[i];
+                const tt = this.invalidatedTTs[i]!;
                 if (tt.isDeleted()) {
                     this.invalidatedTTs[deletedCount++] = tt;
                 } else {

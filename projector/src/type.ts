@@ -258,7 +258,7 @@ export function normalizeFieldsAndHash(kind: TypeKind, fields: FieldDef[], def: 
     return hashCode;
 }
 abstract class TypeWithFields /*implements IType*/ {
-    kind!: TypeKind;
+    declare kind: TypeKind;
     readonly _hashCode: number;
     readonly def: INodeRef; //struct concept
     readonly fields: FieldDef[];
@@ -282,7 +282,7 @@ abstract class TypeWithFields /*implements IType*/ {
         if (fields.length !== otherFields.length)
             return false;
         for (let i = 0; i < fields.length; i++) {
-            if (!fieldEquals(fields[i], otherFields[i]))
+            if (!fieldEquals(fields[i]!, otherFields[i]!))
                 return false;
         }
         return true;
@@ -295,7 +295,7 @@ abstract class TypeWithFields /*implements IType*/ {
         while (low <= hi) {
             const mid = (low + hi) >> 1;
             //var mid = low + (hi - low)/2; //the same as (low + hi) >> 1
-            const midField = fields[mid].uid;
+            const midField = fields[mid]!.uid;
             if (midField === fieldUid)
                 return mid;
             if (midField < fieldUid) {
@@ -383,7 +383,7 @@ export class NodeType extends TypeWithFields implements IType {
 
     updateField(newFieldType: IType, index: number): NodeType {
         const fields = this.fields;
-        const key = fieldInsertKey(fields[index].uid, newFieldType);
+        const key = fieldInsertKey(fields[index]!.uid, newFieldType);
         const resInsert = nodeFieldInsertSet.add(this.fieldInserts, key);
         let toNodeType = resInsert.toNodeType;
         if (toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
@@ -395,7 +395,7 @@ export class NodeType extends TypeWithFields implements IType {
 
     removeField(index: number): NodeType {
         const fields = this.fields;
-        const key = fieldInsertKey(fields[index].uid, deleteFieldSentinel);
+        const key = fieldInsertKey(fields[index]!.uid, deleteFieldSentinel);
         const resInsert = nodeFieldInsertSet.add(this.fieldInserts, key);
         let toNodeType = resInsert.toNodeType;
         if (toNodeType === undefined /* nodeFieldInsertSet.wasCreated*/) {
@@ -453,8 +453,8 @@ NodeType.prototype.kind = TypeKind.Node;
 //TODO: inline these 
 function insertField(fields: FieldDef[], field: FieldDef, index: number): FieldDef[] {
     const uid = field.uid;
-    if (index < fields.length && uid >= fields[index].uid
-        || index - 1 >= 0 && fields[index - 1].uid >= uid) {
+    if (index < fields.length && uid >= fields[index]!.uid
+        || index - 1 >= 0 && fields[index - 1]!.uid >= uid) {
         throw new Error("Invalid try to insert a field.");
     }
     const newFields = fields.slice();
@@ -464,7 +464,7 @@ function insertField(fields: FieldDef[], field: FieldDef, index: number): FieldD
 
 function updateField(fields: FieldDef[], fieldType: IType, index: number): FieldDef[] {
     const newFields = fields.slice();
-    newFields[index] = new FieldDef(newFields[index].uid, fieldType);
+    newFields[index] = new FieldDef(newFields[index]!.uid, fieldType);
     return newFields;
 }
 
@@ -622,7 +622,7 @@ export class NodeFieldInsert {
     //readonly _hashCode: number;
     //readonly nodeType: NodeType;
     readonly field: FieldDef;
-    toNodeType?: NodeType;
+    toNodeType: NodeType | undefined;
     constructor(/*nodeType: NodeType,*/ field: FieldDef/*, hashCode: number*/) {
         //this.nodeType = nodeType;
         this.field = field;

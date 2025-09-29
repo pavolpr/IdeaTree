@@ -11,9 +11,9 @@ export interface IAtom extends ISource {
  * 2) they should notify mobx whenever they have _changed_. This way mobx can re-run any functions (derivations) that are using this atom.
  */
 export class Atom implements IAtom {
-    protected _state: TrackingState = TrackingState.NotTracking; //0
+    protected _state: number = TrackingState.NotTracking; //0
 
-    get lowestDerivationState(): TrackingState { return this._state & TrackingStateMasks.stateMask; }
+    get lowestDerivationState(): TrackingState { return (this._state & TrackingStateMasks.stateMask) as TrackingState; }
     set lowestDerivationState(value: TrackingState) { this._state = (value & TrackingStateMasks.stateMask) | (this._state & ~TrackingStateMasks.stateMask); }
     //lowestDerivationState = TrackingState.NotTracking;
 
@@ -93,7 +93,7 @@ export class Atom implements IAtom {
         const derivations = this.derivations;
         const step = derivationSet.step(derivations);
         for (let i = step - 1, len = derivations.length; i < len; i += step) {
-            const der = derivations[i];
+            const der = derivations[i]!;
             if (!replaceSource(der, this, newAtomValue))
                 throw new Error("Some new atom value was not replaced in the old derivations' sources.");
         }

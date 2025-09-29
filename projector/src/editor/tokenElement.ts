@@ -162,7 +162,7 @@ export abstract class TokenTree extends Reaction implements ITokenElement {
         let endSpan = null;
         const elems = this.elements;
         for (let idx = elems.length - 1; idx >= 0; idx--) {
-            endSpan = elems[idx].endSpan;
+            endSpan = elems[idx]!.endSpan;
             if (endSpan) break;
         }
         this.setNewEndSpan(endSpan);
@@ -350,7 +350,7 @@ export class StructuredTokenTT extends TokenTree {
 
 export function removeTE(parentChildren: ITokenElement[], index: number) {
     for (let i = index; i + 1 < parentChildren.length; i++) {
-        const te = parentChildren[i + 1];
+        const te = parentChildren[i + 1]!;
         parentChildren[i] = te;
         if (te.isTokenTree()) te.index = i;
     }

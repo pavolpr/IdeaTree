@@ -73,27 +73,27 @@ export class HeapDump {
         const content = node._content!;
         const fields = type.fields;
         for (let i = 0; i < fields.length; i++) {
-            const field = fields[i];
+            const field = fields[i]!;
             switch (field.type.kind) {
                 //case TypeKind.ChildNode: continue;
                 case TypeKind.Ref:
-                    this.dumpUid((rawValue(content[i]) as INodeRef).uid, result);
+                    this.dumpUid((rawValue(content[i]!) as INodeRef).uid, result);
                     break;
                 case TypeKind.Primitive:
                 case TypeKind.String:
-                    result.push(rawValue(content[i]));
+                    result.push(rawValue(content[i]!));
             }
         }
 
         //2. children: (children.length, child*)
         const changeMap = this.changeMap;
         for (let i = 0; i < fields.length; i++) {
-            const field = fields[i];
+            const field = fields[i]!;
             if (field.type.kind !== TypeKind.ChildNode) continue;
             // children.length
             const childLenIdx = result.length;
             result.push(0);
-            let childRef = rawValue(content[i]) as INodeRefInternal | undefined;
+            let childRef = rawValue(content[i]!) as INodeRefInternal | undefined;
             do {
                 //child
                 // if(!childRef?.readNode) {

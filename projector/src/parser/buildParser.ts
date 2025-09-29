@@ -9,7 +9,7 @@ import type { INodeRef } from "../node";
 
 
 
-export function collestTokens(heap: Heap, tokenDefs: INodeRef[], constantStringTokenTerms: INodeRef[]) {
+export function collectTokens(heap: Heap, tokenDefs: INodeRef[], constantStringTokenTerms: INodeRef[]) {
 
     forAllNodes(heap.root.read, node => {
         if (node.def == TokenDefDef) {
@@ -24,9 +24,9 @@ export function collestTokens(heap: Heap, tokenDefs: INodeRef[], constantStringT
 export function getAllTokens() {
     const tokenDefs: INodeRef[] = [];
     const constantStringTokenTerms: INodeRef[] = [];
-    collestTokens(structureLangHeap, tokenDefs, constantStringTokenTerms);
-    collestTokens(grammarLangHeap, tokenDefs, constantStringTokenTerms);
-    collestTokens(tokenLangHeap, tokenDefs, constantStringTokenTerms);
+    collectTokens(structureLangHeap, tokenDefs, constantStringTokenTerms);
+    collectTokens(grammarLangHeap, tokenDefs, constantStringTokenTerms);
+    collectTokens(tokenLangHeap, tokenDefs, constantStringTokenTerms);
     const tokenDefNames = tokenDefs.map(node => getNodeName(node));
     const constantTokens = new Set(constantStringTokenTerms.map(node => ConstantStringTerm.ValueFA.get(node.read!)));
     return { tokenDefNames, constantTokens: Array.from(constantTokens) };
