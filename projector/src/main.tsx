@@ -508,7 +508,7 @@ function App() {
                 </For>
             </pre>
             <pre style={{ "white-space": "pre-wrap", "word-break": "break-word" }}>
-                <For each={constantTokens}>
+                <For each={Array.from(constantTokens)}>
                     {(token, i) => i() > 0 ? " '" + token + "'" : "'" + token + "'"}
                 </For>
             </pre>

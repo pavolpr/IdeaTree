@@ -38,5 +38,4 @@
 ## MAYBE
 
 - revise ConceptMemberType, if the isOptional field is the right representation, in opposition to a generic an `Optional`type which would wrap an `INonOptional` trait
-- convert to use pnpm
-- ArraySetImplementation as an abstract base class; or replace by nativ Set ? - do some perf test?
+- ArraySetImplementation as an abstract base class; or replace by native Set ? - do some perf test?

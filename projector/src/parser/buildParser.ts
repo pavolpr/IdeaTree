@@ -29,5 +29,6 @@ export function getAllTokens() {
     collectTokens(tokenLangHeap, tokenDefs, constantStringTokenTerms);
     const tokenDefNames = tokenDefs.map(node => getNodeName(node));
     const constantTokens = new Set(constantStringTokenTerms.map(node => ConstantStringTerm.ValueFA.get(node.read!)));
-    return { tokenDefNames, constantTokens: Array.from(constantTokens) };
+    return { tokenDefs, tokenDefNames, constantTokens };
 }
+
