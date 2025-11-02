@@ -10,7 +10,6 @@ import type { INodeRef } from "../node";
 
 
 export function collectTokens(heap: Heap, tokenDefs: INodeRef[], constantStringTokenTerms: INodeRef[]) {
-
     forAllNodes(heap.root.read, node => {
         if (node.def == TokenDefDef) {
             tokenDefs.push(node.me);
@@ -28,7 +27,7 @@ export function getAllTokens() {
     collectTokens(grammarLangHeap, tokenDefs, constantStringTokenTerms);
     collectTokens(tokenLangHeap, tokenDefs, constantStringTokenTerms);
     const tokenDefNames = tokenDefs.map(node => getNodeName(node));
-    const constantTokens = new Set(constantStringTokenTerms.map(node => ConstantStringTerm.ValueFA.get(node.read!)));
+    const constantTokens = new Set(constantStringTokenTerms.map(node => ConstantStringTerm.ValueFA.get(node.read!)!));
     return { tokenDefs, tokenDefNames, constantTokens };
 }
 
