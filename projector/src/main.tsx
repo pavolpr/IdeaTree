@@ -24,7 +24,7 @@ import { ProjectionMap } from "./editor/renderUtils";
 import { DomRenderingProjection } from "./editor/DomRenderingProjection";
 import { grammarTriviaLangHeap } from "./core/grammarTriviaLang";
 import { addTops, changeTopElementName, removeFirstTops, removeSecondTops, TestSrcHeap } from "./core/testSrc";
-import { getAllTokens } from './parser/buildParser';
+import { buildTokens, getAllTokens, tokenStateDiagram } from './parser/buildParser';
 
 // function showHello(divName: string, name: string) {
 //     const elt = document.getElementById(divName);
@@ -471,8 +471,10 @@ projectionMap.addToProjectionMap(grammarTriviaLangHeap);
 // const grammarString = ctx.renderHeap(grammarLangHeap);
 // const tokenTreeString = ctx.renderHeap(tokenTreeLangHeap);
 
-const { tokenDefNames, constantTokens } = getAllTokens();
-
+const { tokenDefs, tokenDefNames, constantTokens } = getAllTokens();
+const tokens = buildTokens(tokenDefs, constantTokens);
+const tokenDiagram = tokenStateDiagram(tokens.mainStart);
+const tokenDFADiagram = tokenStateDiagram(tokens.mainStart.dfa());
 
 //ChangeSubType()
 const dctxE = new DomRenderingProjection(projectionMap);
@@ -511,6 +513,14 @@ function App() {
                 <For each={Array.from(constantTokens)}>
                     {(token, i) => i() > 0 ? " '" + token + "'" : "'" + token + "'"}
                 </For>
+            </pre>
+            <h3>Token Diagram</h3>
+            <pre style={{ "white-space": "pre-wrap", "word-break": "break-word" }}>
+                {tokenDiagram}
+            </pre>
+            <h3>Token DFA Diagram</h3>
+            <pre style={{ "white-space": "pre-wrap", "word-break": "break-word" }}>
+                {tokenDFADiagram}
             </pre>
             <h3>Test Src  DOM</h3>
             <button onClick={() => addTops()}>Change SubType</button>

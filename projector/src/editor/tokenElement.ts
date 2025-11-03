@@ -284,7 +284,7 @@ export class ProjectedNodeTT extends TokenTree {
     }
 
     render() {
-        console.log("render node:" + this.computeOffsetPath([]));
+        //console.log("render node:" + this.computeOffsetPath([]));
         const ctx = new DomRenderContext(this.projection, this);
         //const startSpan = this.projection.span!;
 
@@ -332,7 +332,7 @@ export class StructuredTokenTT extends TokenTree {
     endTrivia: INodeRef | undefined = undefined;
 
     render() {
-        console.log("render token:" + this.computeOffsetPath([]));
+        //console.log("render token:" + this.computeOffsetPath([]));
         const ctx = new DomRenderContext(this.projection, this);
         //const startSpan = this.projection.span!;
 

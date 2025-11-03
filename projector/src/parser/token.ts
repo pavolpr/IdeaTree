@@ -15,42 +15,37 @@ export class Edge {
     constructor(
         readonly from: number,
         readonly to: number,
-        readonly target: State) { }
+        public target: State) { }
 
     toString() {
-        return `${JSON.stringify(
-            this.from < 0
-                ? "𐍈"
-                : charFor(this.from) + (this.to > this.from + 1 ? "-" + charFor(this.to - 1) : "")
-        )}-> ${this.target.id}`;
+        return `${this.from < 0
+            ? "𐍈"
+            : charFor(this.from) + (this.to > this.from + 1 ? "-" + charFor(this.to - 1) : "")
+            } -> ${this.target.id}`;
     }
 }
 
 function charFor(n: number) {
-    return n >= ASTRAL ? "TooLargeCharCode"
-        : n >= 0xd800 && n < 0xe000 ? "\\Sur{" + n.toString(16) + "}"
-            : String.fromCharCode(n)
+    if (n >= ASTRAL) return `!!Astral(${n.toString(16)})`;
+    if (n >= HI_SUR && n < AFTER_SUR) return n.toString(16);
+    const ch = String.fromCharCode(n);
+    if (/^[a-zA-Z0-9]$/.test(ch)) return ch;
+    return `'${ch}'${n.toString(16)}`;
 }
 
-/*
- State:
-  - edges
-  - accepts
-  - id (maybe)
-  - compile() to create a minimized DFA
-  - closure() to get the epsilon closure of the state
-*/
+
+
 let stateId = 1;
 
 export type Token = INodeRef | string;
 
 export class State {
     id = stateId++;
-    accepts: Token[] | undefined;
+    accepts: Set<Token> | undefined;
     edges: Edge[] = [];
 
-    constructor(accepts?: Token[] | undefined) {
-        this.accepts = accepts;
+    constructor(accepts?: Set<Token> | undefined) {
+        this.accepts = accepts?.size ? accepts : undefined;
     }
 
     edge(from: number, to: number, target: State) {
@@ -58,6 +53,176 @@ export class State {
     }
 
     nullEdge(target: State) { this.edge(-1, -1, target) }
+
+    closure() {
+        const result: State[] = [], seen: Set<State> = new Set();
+        function close(state: State): void {
+            if (seen.has(state)) return;
+            seen.add(state);
+            result.push(state);
+            for (const edge of state.edges) {
+                if (edge.from < 0) close(edge.target);
+            }
+        }
+        close(this);
+        return result;
+    }
+
+    dfa() {
+        const now = performance.now();
+        const visited: Map<string, State> = new Map();
+        const acceptMap: Map<string, Set<Token>> = new Map();
+        const startStates = this.closure().sort((a, b) => a.id - b.id);
+        const start = visit(startStates);
+        console.log("dfa ms:", performance.now() - now);
+        console.log("visited #", visited.size);
+        console.log("acceptMap #", acceptMap.size);
+        const newStart = minimize(Array.from(visited.values()), start);
+        console.log("minimize ms:", performance.now() - now);
+        return newStart;
+
+        function visit(sortedStates: State[]): State {
+            let accepts;
+            for (const state of sortedStates)
+                if (state.accepts)
+                    for (const accept of state.accepts)
+                        (accepts ??= new Set<Token>()).add(accept);
+
+            const state = new State(internAccepts(accepts));
+            visited.set(ids(sortedStates), state);
+
+            const out: Edge[] = [];
+            for (const state of sortedStates)
+                for (const edge of state.edges)
+                    if (edge.from >= 0) out.push(edge);
+
+            const dfaOut = dfaEdges(out);
+            for (const edge of dfaOut) {
+                const target = visited.get(ids(edge.targets)) || visit(edge.targets);
+                state.edge(edge.from, edge.to, target);
+            }
+            return state;
+        }
+
+        function internAccepts(accepts: Set<Token> | undefined): Set<Token> | undefined {
+            if (!accepts?.size) return undefined;
+
+            const id = Array.from(accepts).map(token =>
+                typeof token === "string"
+                    ? JSON.stringify(token) // need to properly delimit literal strings
+                    : token.uid.toString()
+            ).sort().join(".");
+
+            const interned = acceptMap.get(id);
+            if (interned) return interned;
+
+            acceptMap.set(id, accepts);
+            return accepts;
+        }
+    }
+}
+
+function minimize(states: State[], start: State) {
+    let partition: Map<State, State[]> = new Map();
+    const byAccepting: Map<Set<Token> | undefined, State[]> = new Map();
+    for (const state of states) {
+        let group = byAccepting.get(state.accepts);
+        if (!group) byAccepting.set(state.accepts, group = []);
+        group.push(state);
+        partition.set(state, group);
+    }
+
+    for (; ;) {
+        let split = false;
+        const newPartition: Map<State, State[]> = new Map();
+        for (const state of states) {
+            if (newPartition.has(state)) continue;
+            const group = partition.get(state)!;
+            if (group.length === 1) {
+                newPartition.set(state, group!);
+                continue;
+            }
+            let parts = [];
+            groups: for (const state of group) {
+                for (const p of parts) {
+                    if (isEquivalent(state, p[0]!, partition)) {
+                        p.push(state);
+                        continue groups;
+                    }
+                }
+                parts.push([state]);
+            }
+            if (parts.length > 1) split = true;
+            for (const p of parts)
+                for (const s of p)
+                    newPartition.set(s, p);
+        }
+        if (!split) return applyMinimization(states, start, partition);
+        partition = newPartition;
+    }
+}
+
+function isEquivalent(a: State, b: State, partition: Map<State, State[]>): boolean {
+    if (a.edges.length !== b.edges.length) return false;
+    for (let i = 0; i < a.edges.length; i++) {
+        const edgeA = a.edges[i]!, edgeB = b.edges[i]!;
+        if (edgeA.from !== edgeB.from || edgeA.to !== edgeB.to || partition.get(edgeA.target) !== partition.get(edgeB.target))
+            return false;
+    }
+    return true;
+}
+
+function applyMinimization(states: State[], start: State, partition: Map<State, State[]>): State {
+    const newStates: State[] = [];
+    const eliminated: State[] = [];
+    for (const state of states) {
+        if (partition.get(state)![0]! === state) {
+            newStates.push(state);
+            for (let i = 0; i < state.edges.length; i++) {
+                const edge = state.edges[i]!, target = partition.get(edge.target)![0]!;
+                if (target !== edge.target) edge.target = target;
+            }
+        } else {
+            eliminated.push(state);
+        }
+
+    }
+    console.log("newStates #", newStates.length, "eliminated #", eliminated.length);
+    return partition.get(start)![0]!;
+}
+
+
+
+
+//const EMPTY_TOKEN: Token[] = [];
+function ids(states: State[]) {
+    return states.map(state => state.id).join(".");
+}
+
+class DFAEdge {
+    constructor(readonly from: number, readonly to: number, readonly targets: State[]) { }
+}
+
+function dfaEdges(edges: Edge[]): DFAEdge[] {
+    const points: number[] = [], result: DFAEdge[] = [];
+    for (const edge of edges) {
+        if (!points.includes(edge.from)) points.push(edge.from);
+        if (!points.includes(edge.to)) points.push(edge.to);
+    }
+    points.sort((a, b) => a - b);
+    for (let i = 1; i < points.length; i++) {
+        const from = points[i - 1]!, to = points[i]!;
+        const found: State[] = [];
+        for (const edge of edges)
+            if (edge.to > from && edge.from < to)
+                for (const target of edge.target.closure())
+                    if (!found.includes(target))
+                        found.push(target);
+
+        if (found.length)
+            result.push(new DFAEdge(from, to, found.sort((a, b) => a.id - b.id)));
+    }
+    return result;
 }
 
 /*
@@ -83,7 +248,7 @@ export class Tokens {
     built: Set<Token> = new Set();
     building: BuildingToken[] = [];
     keywords: Set<string> = new Set();
-    keywordAccept: State = new State([""]); // empty string to accept the keyword
+    keywordAccept: State = new State(new Set<Token>().add("")); // empty string to accept the keyword
 
     makeToken(token: Token) {
         if (this.built.has(token)) return;
@@ -94,10 +259,10 @@ export class Tokens {
             if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token)) {
                 this.buildKeyword(token);
             } else {
-                buildLiteral(token, this.mainStart, new State([token]));
+                buildLiteral(token, this.mainStart, new State(new Set<Token>().add(token)));
             }
         } else {
-            this.buildToken(token, this.mainStart, new State([token]));
+            this.buildToken(token, this.mainStart, new State(new Set<Token>().add(token)));
         }
         this.built.add(token);
     }
@@ -129,6 +294,7 @@ export class Tokens {
         }
         const tokenStart = new State();
         start.nullEdge(tokenStart);
+        //const tokenStart = start;
         this.building.push(new BuildingToken(tokenDef, tokenStart, end));
         const term = TokenDef.TermCA.getChild(tokenDef.read!)?.read!;
         this.build(term, tokenStart, end);

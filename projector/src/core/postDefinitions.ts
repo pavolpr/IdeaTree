@@ -319,7 +319,7 @@ const EscapedCharTD = def(tokenDef("EscapedChar", seqTT(
     paraTT(parensTT(altsTT(
         charTT('\\'), charTT('"'), charTT('\''), charTT('0'), charTT('n'), charTT('t'),
         seqTT(charTT('u'), paraTT(quantTT(tokenDefRefTT(HexCharTD), 4), style(HexNumberStyle))),
-        seqTT(charTT('u{'), paraTT(quantTT(tokenDefRefTT(HexCharTD), 1, 6), style(HexNumberStyle)), charTT('}')),
+        seqTT(stringTT("u{"), paraTT(quantTT(tokenDefRefTT(HexCharTD), 1, 6), style(HexNumberStyle)), charTT('}')),
     )), style(EscapedCharStyle))
 )));
 // token StringValue
@@ -334,7 +334,7 @@ const StringValueTD = def(tokenDef("StringValue",
 //     !['\\' | '\''] | EscapedChar
 const CharValueTD = def(tokenDef("CharValue",
     altsTT(
-        notTT(charTT('\\'), charTT('\'')),
+        notTT(charTT('\\'), charTT("'")),
         tokenDefRefTT(EscapedCharTD)
     )
 ));
@@ -361,7 +361,7 @@ addProjection(TokenDefDef, undefined, [
 setTokenType(ConstantStringTokenTerm.ValueFA, StringValueTD);
 addProjection(ConstantStringTokenTermDef, undefined, [
     para(token('"'), style(QuoteStyle), matchBraceLeft()), dropSpace(),
-    styledMember(ConstantStringTerm.ValueFA, StringStyle),
+    styledMember(ConstantStringTokenTerm.ValueFA, StringStyle),
     dropSpace(), para(token('"'), style(QuoteStyle), matchBraceRight())
 ]);
 
