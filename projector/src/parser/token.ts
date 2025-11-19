@@ -79,6 +79,22 @@ export class State {
         console.log("acceptMap #", acceptMap.size);
         const newStart = minimize(Array.from(visited.values()), start);
         console.log("minimize ms:", performance.now() - now);
+        const extraTokens = [];
+        let frequency = 0;
+        do {
+            let acceptFreqs = Array.from(acceptMapFrequency(acceptMap).entries()).sort((a, b) => b[1] - a[1]);
+            let token;
+            [token, frequency] = acceptFreqs[0]!;
+            if (frequency > 1) {
+                extraTokens.push(token);
+                for (const accepts of acceptMap.values()) {
+                    if (accepts.has(token)) {
+                        accepts.delete(token);
+                    }
+                }
+            }
+        } while (frequency > 1);
+        console.log("extraTokens:", extraTokens);
         return newStart;
 
         function visit(sortedStates: State[]): State {
@@ -119,7 +135,40 @@ export class State {
             acceptMap.set(id, accepts);
             return accepts;
         }
+
+
     }
+
+    reachable(f: (state: State, edges: Edge[]) => void) {
+        const visited: Set<State> = new Set();
+        const edges: Edge[] = [];
+        function visit(state: State) {
+            visited.add(state);
+            f(state, edges);
+            for (const edge of state.edges) {
+                if (!visited.has(edge.target)) {
+                    edges.push(edge);
+                    visit(edge.target);
+                    edges.pop();
+                }
+            }
+        }
+        visit(this);
+    }
+
+
+}
+
+function acceptMapFrequency(
+    acceptMap: Map<string, Set<Token>>
+) {
+    const frequency: Map<Token, number> = new Map();
+    for (const accept of acceptMap.values()) {
+        for (const token of accept) {
+            frequency.set(token, (frequency.get(token) || 0) + 1);
+        }
+    }
+    return frequency;
 }
 
 function minimize(states: State[], start: State) {
@@ -246,6 +295,7 @@ class BuildingToken {
 export class Tokens {
     mainStart: State = new State();
     built: Set<Token> = new Set();
+    hasCycle: Set<Token> = new Set();
     building: BuildingToken[] = [];
     keywords: Set<string> = new Set();
     keywordAccept: State = new State(new Set<Token>().add("")); // empty string to accept the keyword
@@ -287,6 +337,7 @@ export class Tokens {
         if (building) {
             if (building.end === end) {
                 start.nullEdge(building.start);
+                this.registerCycle();
                 return;
             }
             const lastIndex = this.building.findIndex(b => b.tokenDef === tokenDef);
@@ -339,7 +390,7 @@ export class Tokens {
             const min = Number(QuantizedTokenTerm.MinFA.get(term)!);
             const isRange = QuantizedTokenTerm.IsRangeFA.get(term)!;
             let max = isRange ? Number(QuantizedTokenTerm.MaxFA.get(term)!) : min;
-            if (max > 42) max = 42;
+            if (max > 42) throw new Error(`Quantized token ${getTokenName(this.building[0]!.tokenDef)} has too many repetitions: ${max}`);
             for (let i = 1; i <= max; i++) {
                 const next = i === max ? end : new State();
                 this.build(quantTerm, start, next);
@@ -358,6 +409,7 @@ export class Tokens {
             start.nullEdge(loop);
             this.build(zeroOrMoreTerm, loop, loop);
             loop.nullEdge(end);
+            this.registerCycle();
         } else if (term.def === OneOrMoreTokenTermDef) {
             const oneOrMoreTerm = OneOrMoreTokenTerm.TermCA.getChild(term)?.read!;
             const loopStart = new State();
@@ -366,6 +418,7 @@ export class Tokens {
             this.build(oneOrMoreTerm, loopStart, loopEnd);
             loopEnd.nullEdge(loopStart);
             loopEnd.nullEdge(end);
+            this.registerCycle();
         } else if (term.def === ParameterizedTokenTermDef) {
             const paramTerm = ParameterizedTokenTerm.TermCA.getChild(term)?.read!;
             this.build(paramTerm, start, end);
@@ -383,6 +436,10 @@ export class Tokens {
         } else {
             throw new Error(`Unsupported token term: ${term.def}`);
         }
+    }
+
+    registerCycle() {
+        this.hasCycle.add(this.building[0]!.tokenDef);
     }
 }
 

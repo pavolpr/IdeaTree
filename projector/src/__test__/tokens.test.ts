@@ -8,7 +8,7 @@ describe("tokens", () => {
         globalState.setupEditMode();
         const { tokenDefs, constantTokens } = getAllTokens();
         const tokens = buildTokens(tokenDefs, constantTokens);
-
+        const dfa = tokens.mainStart.dfa();
         expect(tokens.keywords.size).toBe(constantTokens.size);
     });
 });
